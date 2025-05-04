@@ -33,7 +33,7 @@ def solve_recipe(req: SolveRequest) -> SolveResponse:
         return SolveResponse(success=False,
                              message=f"Unknown base '{base}'")
 
-    start = set(rules.plain_products[base])
+    start = set(rules.plain_products[base][1])
 
     # If we already satisfied everything (and no forbidden in final), done.
     if want_inc.issubset(start) and not (start & want_exc):

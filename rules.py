@@ -9,86 +9,58 @@ from typing import Dict, List, Tuple, Optional
 import pandas as pd
 
 # Base products can have default (innate) effects.
-plain_products: Dict[str, List[str]] = {
-    "OG Kush": ["Calming"],
-    "Sour Diesel": ["Refreshing"],
-    "Green Crack": ["Energizing"],
-    "Granddaddy Purple": ["Sedating"],
-    "Methamphetamine": [],
-    "Cocaine": [],
-}
+# products -> (value, innate_effects)
+plain_products: Dict[str, Tuple[int, List[str]]] = {}
 
 # List of all ingredients
 # ingredient -> (price, new_effect)
-ingredients: Dict[str, Tuple[int, str]] = {
-    "Cuke": (2, "Energizing"),
-    "Banana": (2, "Gingeritis"),
-    "Paracetamol": (3, "Sneaky"),
-    "Donut": (3, "Calorie-Dense"),
-    "Viagor": (4, "Tropic Thunder"),
-    "Mouth Wash": (4, "Balding"),
-    "Flu Medicine": (5, "Sedating"),
-    "Gasoline": (5, "Toxic"),
-    "Energy Drink": (6, "Athletic"),
-    "Motor Oil": (6, "Slippery"),
-    "Mega Bean": (7, "Foggy"),
-    "Chili": (7, "Spicy"),
-    "Battery": (8, "Bright-Eyed"),
-    "Iodine": (8, "Jennerising"),
-    "Addy": (9, "Thought-Provoking"),
-    "Horse Semen": (9, "Long Faced"),
-}
+ingredients: Dict[str, Tuple[int, str]] = {}
 
 # List of all possible effects (excluding "base")
-effects: List[str] = [
-    "Anti-Gravity",
-    "Athletic",
-    "Balding",
-    "Bright-Eyed",
-    "Calming",
-    "Calorie-Dense",
-    "Cyclopean",
-    "Disorienting",
-    "Electrifying",
-    "Energizing",
-    "Euphoric",
-    "Explosive",
-    "Focused",
-    "Foggy",
-    "Gingeritis",
-    "Glowing",
-    "Jennerising",
-    "Laxative",
-    "Lethal",
-    "Long Faced",
-    "Munchies",
-    "Paranoia",
-    "Refreshing",
-    "Schizophrenic",
-    "Sedating",
-    "Seizure-Inducing",
-    "Shrinking",
-    "Slippery",
-    "Smelly",
-    "Sneaky",
-    "Spicy",
-    "Thought-Provoking",
-    "Toxic",
-    "Tropic Thunder",
-    "Zombifying",
-]
+# effect -> (multiplier, hex_color)
+effects: Dict[str, Tuple[float, str]] = {}
 
 # Combination rules: (current_effect, ingredient) -> (new_effect, if_other_missing)
 # If no rule applies, the effect carries over unchanged.
 rules: Dict[Tuple[str, str], Tuple[str, Optional[str]]] = {}
 
+def load_definitions():
+    load_products()
+    load_rules()
+    load_effects()
+    load_ingredients()
+
+def load_products():
+    df = pd.read_csv("csv/products.csv", delimiter=",", header=0)
+    for _, row in df.iterrows():
+        plain_products[row.Name] = (
+            int(row.Value),
+            str(row.Effects).split(";")
+        )
+
 def load_rules():
-    df = pd.read_csv("rules.csv", delimiter=",", header=0)
+    df = pd.read_csv("csv/rules.csv", delimiter=",", header=0)
     for _, row in df.iterrows():
         rules[(
             str(row.Replaces_Existing_Effect).lower(),
             str(row.Ingredient).lower()
         )] = (row.Effect, row.If_Other_Missing)
+
+def load_effects():
+    df = pd.read_csv("csv/effects.csv", delimiter=",", header=0)
+    for _, row in df.iterrows():
+        effects[str(row.Name)] = (
+            float(row.Multiplier),
+            str(row.Color),
+        )
+
+def load_ingredients():
+    df = pd.read_csv("csv/ingredients.csv", delimiter=",", header=0)
+    for _, row in df.iterrows():
+        ingredients[str(row.Name)] = (
+            int(row.Price),
+            str(row.Effect),
+        )
 
 
 def mutate(current: List[str], ingredient: str) -> List[str]:
