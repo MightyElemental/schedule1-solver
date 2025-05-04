@@ -7,6 +7,7 @@ Users should populate these lists/dicts with the full data set.
 
 from typing import Dict, List, Tuple, Optional
 import pandas as pd
+from numpy import nan
 
 # Base products can have default (innate) effects.
 # products -> (value, innate_effects)
@@ -32,10 +33,12 @@ def load_definitions():
 
 def load_products():
     df = pd.read_csv("csv/products.csv", delimiter=",", header=0)
+    df = df.replace({nan: None})
     for _, row in df.iterrows():
+        innate_effects = str(row.Effects).split(";") if row.Effects else []
         plain_products[row.Name] = (
             int(row.Value),
-            str(row.Effects).split(";")
+            innate_effects,
         )
 
 def load_rules():
