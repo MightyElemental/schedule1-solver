@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Alchemy Recipe Solver</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div id="app" class="dark-theme">
+    <h1>Alchemy Recipe Solver</h1>
+
+    <!-- Base selector, centered -->
+    <div class="base-selector">
+      <label for="base-select">Base Product:</label>
+      <select id="base-select" v-model="form.base">
+        <option v-for="b in lists.bases" :key="b" :value="b">{{ b }}</option>
+      </select>
+    </div>
+
+    <!-- Include / Exclude side by side -->
+    <div class="sections">
+      <!-- Include Section -->
+      <div class="section">
+        <h3>Include Effects (max 8)</h3>
+        <select
+          v-model="newInclude"
+          @change="addInclude"
+          :disabled="includeDisabled"
+        >
+          <option value="" disabled>-- select effect --</option>
+          <option
+            v-for="eff in availableInclude"
+            :key="eff"
+            :value="eff"
+          >{{ eff }}</option>
+        </select>
+        <ul class="sel-list">
+          <li v-for="eff in form.include" :key="eff">
+            <span class="eff-name">{{ eff }}</span>
+            <button class="remove-btn" @click="removeInclude(eff)">–</button>
+          </li>
+        </ul>
+        <button class="clear-btn" @click="clearInclude()">Clear Include</button>
+      </div>
+
+      <!-- Exclude Section -->
+      <div class="section">
+        <h3>Exclude Effects</h3>
+        <select
+          v-model="newExclude"
+          @change="addExclude"
+          :disabled="excludeDisabled"
+        >
+          <option value="" disabled>-- select effect --</option>
+          <option
+            v-for="eff in availableExclude"
+            :key="eff"
+            :value="eff"
+          >{{ eff }}</option>
+        </select>
+        <ul class="sel-list">
+          <li v-for="eff in form.exclude" :key="eff">
+            <span class="eff-name">{{ eff }}</span>
+            <button class="remove-btn" @click="removeExclude(eff)">–</button>
+          </li>
+        </ul>
+        <button class="clear-btn" @click="clearExclude()">Clear Exclude</button>
+      </div>
+    </div>
+
+    <!-- Clear All -->
+    <div class="clear-all-row">
+      <button class="clear-all-btn" @click="clearAll()">Clear All</button>
+    </div>
+
+    <!-- Solve button -->
+    <div class="solve-row">
+      <button class="solve-btn" @click="solve()">Solve</button>
+    </div>
+
+    <!-- Result -->
+    <div v-if="result" class="result">
+      <h2>Result</h2>
+      <div v-if="result.success">
+        <p><strong>Ingredients (in order):</strong></p>
+        <ol>
+          <li v-for="ing in result.ingredients" :key="ing">{{ ing }}</li>
+        </ol>
+        <p><strong>Final Effects:</strong> {{ result.final_effects.join(', ') }}</p>
+      </div>
+      <div v-else>
+        <p class="error">{{ result.message }}</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
