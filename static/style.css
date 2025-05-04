@@ -1,14 +1,24 @@
 /* style.css */
-/* Container caps at 50vw on wide screens, 90vw on narrow ones */
+
+/* Make whole page the same dark background */
+body {
+  margin: 0;
+  background: #222;
+  color: #ddd;
+  font-family: sans-serif;
+}
+
+/* Centered container with min/max width */
 .dark-theme {
-  width: 90vw;
-  max-width: 50vw;
   margin: 1rem auto;
   padding: 1rem;
   background: #222;
   color: #ddd;
-  font-family: sans-serif;
   border-radius: 6px;
+  width: 90vw;
+  max-width: 50vw;
+  min-width: 320px;
+  box-sizing: border-box;
 }
 .dark-theme h1 {
   text-align: center;
@@ -27,9 +37,10 @@
   color: #ddd;
   border: 1px solid #555;
   margin-left: 0.5em;
+  min-width: 150px;
 }
 
-/* Side-by-side sections */
+/* Sections side-by-side */
 .sections {
   display: flex;
   gap: 1rem;
@@ -46,7 +57,7 @@
   color: #aff;
 }
 
-/* Dropdown picker */
+/* Dropdown picker fills width */
 .section > select {
   width: 100%;
   margin-bottom: 0.75em;
@@ -58,38 +69,34 @@
   cursor: pointer;
 }
 
-/* Selected-list container */
+/* Selected-list expands vertical size (no scrollbar) */
 .sel-list {
   background: #333;
   padding: 0.5em;
   border-radius: 4px;
-  max-height: 200px;
-  overflow-y: auto;
   list-style: none;
   margin: 0 0 0.75em 0;
 }
 
-/* Each list item as an indented row */
+/* Indented effect items with colored stripe */
 .sel-list li {
   display: flex;
   align-items: center;
   margin-bottom: 0.4em;
   border: 1px solid #444;
+  border-left: 4px solid #fff; /* overridden inline */
   border-radius: 4px;
   overflow: hidden;
-  background: transparent;
 }
 .sel-list li:last-child {
   margin-bottom: 0;
 }
-
-/* Effect name takes remaining space */
 .eff-name {
   flex: 1;
   padding: 0.4em 0.6em;
 }
 
-/* Remove button as flush end cap */
+/* Remove button flush end-cap */
 .remove-btn {
   background: #a33;
   color: #fff;
@@ -145,12 +152,18 @@
   background: #2a2a2a;
   padding: 1rem;
   border-radius: 4px;
-  max-width: 100%;
   margin: 0 auto;
 }
 .result h2 {
   margin-top: 0;
   color: #9f9;
+}
+.final-effects {
+  list-style: none;
+  padding: 0;
+}
+.final-effects li {
+  margin-bottom: 0.3em;
 }
 .error {
   color: #f88;

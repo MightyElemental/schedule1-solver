@@ -9,71 +9,85 @@
   <div id="app" class="dark-theme">
     <h1>Alchemy Recipe Solver</h1>
 
-    <!-- Base selector, centered -->
+    <!-- Base selector -->
     <div class="base-selector">
       <label for="base-select">Base Product:</label>
       <select id="base-select" v-model="form.base">
-        <option v-for="b in lists.bases" :key="b" :value="b">{{ b }}</option>
+        <option v-for="b in lists.bases"
+                :key="b.name"
+                :value="b.name">
+          {{ b.name }}
+        </option>
       </select>
     </div>
 
-    <!-- Include / Exclude side by side -->
+    <!-- Include / Exclude -->
     <div class="sections">
-      <!-- Include Section -->
       <div class="section">
         <h3>Include Effects (max 8)</h3>
-        <select
-          v-model="newInclude"
-          @change="addInclude"
-          :disabled="includeDisabled"
-        >
+        <select v-model="newInclude"
+                @change="addInclude"
+                :disabled="includeDisabled">
           <option value="" disabled>-- select effect --</option>
-          <option
-            v-for="eff in availableInclude"
-            :key="eff"
-            :value="eff"
-          >{{ eff }}</option>
+          <option v-for="eff in availableInclude"
+                  :key="eff.name"
+                  :value="eff.name">
+            {{ eff.name }}
+          </option>
         </select>
         <ul class="sel-list">
-          <li v-for="eff in form.include" :key="eff">
-            <span class="eff-name">{{ eff }}</span>
-            <button class="remove-btn" @click="removeInclude(eff)">–</button>
+          <li v-for="effName in form.include"
+              :key="effName"
+              :style="{ borderLeftColor: getColor(effName) }">
+            <span class="eff-name" :style="{ color: getColor(effName) }">
+              {{ effName }}
+            </span>
+            <button class="remove-btn"
+                    @click="removeInclude(effName)">–</button>
           </li>
         </ul>
-        <button class="clear-btn" @click="clearInclude()">Clear Include</button>
+        <button class="clear-btn" @click="clearInclude()">
+          Clear Include
+        </button>
       </div>
 
-      <!-- Exclude Section -->
       <div class="section">
         <h3>Exclude Effects</h3>
-        <select
-          v-model="newExclude"
-          @change="addExclude"
-          :disabled="excludeDisabled"
-        >
+        <select v-model="newExclude"
+                @change="addExclude"
+                :disabled="excludeDisabled">
           <option value="" disabled>-- select effect --</option>
-          <option
-            v-for="eff in availableExclude"
-            :key="eff"
-            :value="eff"
-          >{{ eff }}</option>
+          <option v-for="eff in availableExclude"
+                  :key="eff.name"
+                  :value="eff.name">
+            {{ eff.name }}
+          </option>
         </select>
         <ul class="sel-list">
-          <li v-for="eff in form.exclude" :key="eff">
-            <span class="eff-name">{{ eff }}</span>
-            <button class="remove-btn" @click="removeExclude(eff)">–</button>
+          <li v-for="effName in form.exclude"
+              :key="effName"
+              :style="{ borderLeftColor: getColor(effName) }">
+            <span class="eff-name" :style="{ color: getColor(effName) }">
+              {{ effName }}
+            </span>
+            <button class="remove-btn"
+                    @click="removeExclude(effName)">–</button>
           </li>
         </ul>
-        <button class="clear-btn" @click="clearExclude()">Clear Exclude</button>
+        <button class="clear-btn" @click="clearExclude()">
+          Clear Exclude
+        </button>
       </div>
     </div>
 
     <!-- Clear All -->
     <div class="clear-all-row">
-      <button class="clear-all-btn" @click="clearAll()">Clear All</button>
+      <button class="clear-all-btn" @click="clearAll()">
+        Clear All
+      </button>
     </div>
 
-    <!-- Solve button -->
+    <!-- Solve -->
     <div class="solve-row">
       <button class="solve-btn" @click="solve()">Solve</button>
     </div>
@@ -82,11 +96,23 @@
     <div v-if="result" class="result">
       <h2>Result</h2>
       <div v-if="result.success">
-        <p><strong>Ingredients (in order):</strong></p>
+        <p><strong>Base:</strong> {{ form.base }} (value: {{ pricing.basePrice }})</p>
+        <p><strong>Ingredients:</strong></p>
         <ol>
-          <li v-for="ing in result.ingredients" :key="ing">{{ ing }}</li>
+          <li v-for="ing in pricing.ingredients" :key="ing.name">
+            {{ ing.name }} ({{ ing.price }})
+          </li>
         </ol>
-        <p><strong>Final Effects:</strong> {{ result.final_effects.join(', ') }}</p>
+        <p><strong>Ingredients Total:</strong> {{ pricing.ingredientsTotal }}</p>
+        <p><strong>Base + Ingredients Total Cost:</strong> {{ pricing.totalCost }}</p>
+        <p><strong>Final Effects:</strong></p>
+        <ul class="final-effects">
+          <li v-for="eff in pricing.finalEffects" :key="eff.name"
+              :style="{ color: eff.color }">
+            {{ eff.name }} (×{{ eff.multiplier }})
+          </li>
+        </ul>
+        <p><strong>Fair Sell Price:</strong> {{ pricing.sellPrice }}</p>
       </div>
       <div v-else>
         <p class="error">{{ result.message }}</p>

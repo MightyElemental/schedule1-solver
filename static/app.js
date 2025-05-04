@@ -12,19 +12,18 @@ createApp({
     };
   },
   computed: {
-    // Effects not chosen in either list
     availableInclude() {
       return this.lists.effects.filter(
         e =>
-          !this.form.include.includes(e) &&
-          !this.form.exclude.includes(e)
+          !this.form.include.includes(e.name) &&
+          !this.form.exclude.includes(e.name)
       );
     },
     availableExclude() {
       return this.lists.effects.filter(
         e =>
-          !this.form.exclude.includes(e) &&
-          !this.form.include.includes(e)
+          !this.form.exclude.includes(e.name) &&
+          !this.form.include.includes(e.name)
       );
     },
     includeDisabled() {
@@ -36,14 +35,47 @@ createApp({
     excludeDisabled() {
       return this.availableExclude.length === 0;
     },
+    // enrich result with pricing & effect detail
+    pricing() {
+      if (!this.result?.success) return {};
+      // base
+      const baseObj = this.lists.bases.find(b => b.name === this.form.base);
+      const basePrice = baseObj.value;
+      // ingredients
+      const ingredients = this.result.ingredients.map(name => {
+        const obj = this.lists.ingredients.find(i => i.name === name);
+        return { name, price: obj.price };
+      });
+      const ingredientsTotal = ingredients.reduce((s, i) => s + i.price, 0);
+      const totalCost = basePrice + ingredientsTotal;
+      // final effects
+      const finalEffects = this.result.final_effects.map(name => {
+        const ef = this.lists.effects.find(e => e.name === name);
+        return { name, multiplier: ef.multiplier, color: ef.color };
+      });
+      const multSum = finalEffects.reduce((s, e) => s + e.multiplier, 0);
+      const sellPrice = Math.round(basePrice * (1 + multSum));
+      return {
+        basePrice,
+        ingredients,
+        ingredientsTotal,
+        totalCost,
+        finalEffects,
+        sellPrice,
+      };
+    },
   },
   methods: {
     async fetchLists() {
       const res = await fetch("/lists");
       this.lists = await res.json();
       if (this.lists.bases.length) {
-        this.form.base = this.lists.bases[0];
+        this.form.base = this.lists.bases[0].name;
       }
+    },
+    getColor(effName) {
+      const e = this.lists.effects.find(x => x.name === effName);
+      return e ? e.color : "#fff";
     },
     addInclude() {
       if (this.newInclude) {
@@ -57,23 +89,20 @@ createApp({
         this.newExclude = "";
       }
     },
-    removeInclude(eff) {
-      this.form.include = this.form.include.filter(e => e !== eff);
+    removeInclude(e) {
+      this.form.include = this.form.include.filter(x => x !== e);
     },
-    removeExclude(eff) {
-      this.form.exclude = this.form.exclude.filter(e => e !== eff);
+    removeExclude(e) {
+      this.form.exclude = this.form.exclude.filter(x => x !== e);
     },
     clearInclude() {
-      this.form.include = [];
-      this.newInclude = "";
+      this.form.include = []; this.newInclude = "";
     },
     clearExclude() {
-      this.form.exclude = [];
-      this.newExclude = "";
+      this.form.exclude = []; this.newExclude = "";
     },
     clearAll() {
-      this.clearInclude();
-      this.clearExclude();
+      this.clearInclude(); this.clearExclude();
     },
     async solve() {
       this.result = null;
@@ -92,5 +121,5 @@ createApp({
   },
   mounted() {
     this.fetchLists();
-  },
+  }
 }).mount("#app");
