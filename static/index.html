@@ -9,20 +9,27 @@
   <div id="app" class="dark-theme">
     <h1>Alchemy Recipe Solver</h1>
 
-    <!-- Base selector -->
+    <!-- Base selector + innate effects -->
     <div class="base-selector">
       <label for="base-select">Base Product:</label>
       <select id="base-select" v-model="form.base">
         <option v-for="b in lists.bases"
                 :key="b.name"
-                :value="b.name">
-          {{ b.name }}
-        </option>
+                :value="b.name">{{ b.name }}</option>
       </select>
+      <div class="innate-effects" v-if="baseInnates.length">
+        <span>Innate Effects:</span>
+        <span v-for="e in baseInnates" :key="e.name"
+              class="innate-eff"
+              :style="{ color: e.color }">
+          {{ e.name }} (×{{ e.multiplier }})
+        </span>
+      </div>
     </div>
 
     <!-- Include / Exclude -->
     <div class="sections">
+      <!-- Include -->
       <div class="section">
         <h3>Include Effects (max 8)</h3>
         <select v-model="newInclude"
@@ -32,7 +39,7 @@
           <option v-for="eff in availableInclude"
                   :key="eff.name"
                   :value="eff.name">
-            {{ eff.name }}
+            {{ eff.name }} (×{{ eff.multiplier }})
           </option>
         </select>
         <ul class="sel-list">
@@ -40,17 +47,15 @@
               :key="effName"
               :style="{ borderLeftColor: getColor(effName) }">
             <span class="eff-name" :style="{ color: getColor(effName) }">
-              {{ effName }}
+              {{ effName }} (×{{ getMultiplier(effName) }})
             </span>
             <button class="remove-btn"
                     @click="removeInclude(effName)">–</button>
           </li>
         </ul>
-        <button class="clear-btn" @click="clearInclude()">
-          Clear Include
-        </button>
+        <button class="clear-btn" @click="clearInclude()">Clear Include</button>
       </div>
-
+      <!-- Exclude -->
       <div class="section">
         <h3>Exclude Effects</h3>
         <select v-model="newExclude"
@@ -60,7 +65,7 @@
           <option v-for="eff in availableExclude"
                   :key="eff.name"
                   :value="eff.name">
-            {{ eff.name }}
+            {{ eff.name }} (×{{ eff.multiplier }})
           </option>
         </select>
         <ul class="sel-list">
@@ -68,15 +73,13 @@
               :key="effName"
               :style="{ borderLeftColor: getColor(effName) }">
             <span class="eff-name" :style="{ color: getColor(effName) }">
-              {{ effName }}
+              {{ effName }} (×{{ getMultiplier(effName) }})
             </span>
             <button class="remove-btn"
                     @click="removeExclude(effName)">–</button>
           </li>
         </ul>
-        <button class="clear-btn" @click="clearExclude()">
-          Clear Exclude
-        </button>
+        <button class="clear-btn" @click="clearExclude()">Clear Exclude</button>
       </div>
     </div>
 
@@ -95,27 +98,37 @@
     <!-- Result -->
     <div v-if="result" class="result">
       <h2>Result</h2>
-      <div v-if="result.success">
-        <p><strong>Base:</strong> {{ form.base }} (value: {{ pricing.basePrice }})</p>
-        <p><strong>Ingredients:</strong></p>
-        <ol>
-          <li v-for="ing in pricing.ingredients" :key="ing.name">
-            {{ ing.name }} ({{ ing.price }})
-          </li>
-        </ol>
-        <p><strong>Ingredients Total:</strong> {{ pricing.ingredientsTotal }}</p>
-        <p><strong>Base + Ingredients Total Cost:</strong> {{ pricing.totalCost }}</p>
-        <p><strong>Final Effects:</strong></p>
-        <ul class="final-effects">
-          <li v-for="eff in pricing.finalEffects" :key="eff.name"
-              :style="{ color: eff.color }">
-            {{ eff.name }} (×{{ eff.multiplier }})
-          </li>
-        </ul>
-        <p><strong>Fair Sell Price:</strong> {{ pricing.sellPrice }}</p>
+      <div v-if="result.success" class="cols">
+        <!-- Left column: costs -->
+        <div class="col">
+          <p><strong>Base:</strong> {{ form.base }}
+            (value: ${{ pricing.basePrice }})
+          </p>
+          <p><strong>Ingredients:</strong></p>
+          <ol>
+            <li v-for="ing in pricing.ingredients" :key="ing.name">
+              {{ ing.name }} (${{ ing.price }})
+            </li>
+          </ol>
+          <p><strong>Ingredients Total:</strong>
+             ${{ pricing.ingredientsTotal }}</p>
+          <p><strong>Total Cost:</strong> ${{ pricing.totalCost }}</p>
+        </div>
+        <!-- Right column: effects & sell price -->
+        <div class="col">
+          <p><strong>Final Effects:</strong></p>
+          <ul class="final-effects">
+            <li v-for="eff in pricing.finalEffects" :key="eff.name"
+                :style="{ color: eff.color }">
+              {{ eff.name }} (×{{ eff.multiplier }})
+            </li>
+          </ul>
+          <p><strong>Fair Sell Price:</strong>
+            ${{ pricing.sellPrice }}</p>
+        </div>
       </div>
-      <div v-else>
-        <p class="error">{{ result.message }}</p>
+      <div v-else class="error">
+        <p>Error: {{ result.message }}</p>
       </div>
     </div>
   </div>

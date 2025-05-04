@@ -1,7 +1,7 @@
 Name,Effect_ID,Multiplier,Color
 Anti-Gravity,antigravity,0.54,#5a9de3
-Athletic,athletic,0.32,
-Balding,balding,0.3,
+Athletic,athletic,0.32,#6cc4fd
+Balding,balding,0.3,#d2a24b
 Bright-Eyed,brighteyed,0.4,
 Calming,calming,0.1,
 Calorie-Dense,caloriedense,0.28,

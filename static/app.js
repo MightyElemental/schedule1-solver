@@ -12,43 +12,44 @@ createApp({
     };
   },
   computed: {
+    // sort dropdowns by descending multiplier
     availableInclude() {
-      return this.lists.effects.filter(
-        e =>
-          !this.form.include.includes(e.name) &&
-          !this.form.exclude.includes(e.name)
-      );
+      return this.lists.effects
+        .filter(e => !this.form.include.includes(e.name)
+                  && !this.form.exclude.includes(e.name))
+        .sort((a, b) => b.multiplier - a.multiplier);
     },
     availableExclude() {
-      return this.lists.effects.filter(
-        e =>
-          !this.form.exclude.includes(e.name) &&
-          !this.form.include.includes(e.name)
-      );
+      return this.lists.effects
+        .filter(e => !this.form.exclude.includes(e.name)
+                  && !this.form.include.includes(e.name))
+        .sort((a, b) => b.multiplier - a.multiplier);
     },
     includeDisabled() {
-      return (
-        this.form.include.length >= 8 ||
-        this.availableInclude.length === 0
-      );
+      return this.form.include.length >= 8
+          || this.availableInclude.length === 0;
     },
     excludeDisabled() {
       return this.availableExclude.length === 0;
     },
-    // enrich result with pricing & effect detail
+    baseInnates() {
+      const b = this.lists.bases.find(x => x.name === this.form.base);
+      if (!b) return [];
+      return b.effects.map(name => {
+        const e = this.lists.effects.find(z => z.name === name) || {};
+        return { name, multiplier: e.multiplier||0, color: e.color||"#fff" };
+      });
+    },
     pricing() {
       if (!this.result?.success) return {};
-      // base
       const baseObj = this.lists.bases.find(b => b.name === this.form.base);
       const basePrice = baseObj.value;
-      // ingredients
       const ingredients = this.result.ingredients.map(name => {
         const obj = this.lists.ingredients.find(i => i.name === name);
         return { name, price: obj.price };
       });
       const ingredientsTotal = ingredients.reduce((s, i) => s + i.price, 0);
       const totalCost = basePrice + ingredientsTotal;
-      // final effects
       const finalEffects = this.result.final_effects.map(name => {
         const ef = this.lists.effects.find(e => e.name === name);
         return { name, multiplier: ef.multiplier, color: ef.color };
@@ -56,14 +57,10 @@ createApp({
       const multSum = finalEffects.reduce((s, e) => s + e.multiplier, 0);
       const sellPrice = Math.round(basePrice * (1 + multSum));
       return {
-        basePrice,
-        ingredients,
-        ingredientsTotal,
-        totalCost,
-        finalEffects,
-        sellPrice,
+        basePrice, ingredients, ingredientsTotal,
+        totalCost, finalEffects, sellPrice
       };
-    },
+    }
   },
   methods: {
     async fetchLists() {
@@ -73,9 +70,13 @@ createApp({
         this.form.base = this.lists.bases[0].name;
       }
     },
-    getColor(effName) {
-      const e = this.lists.effects.find(x => x.name === effName);
+    getColor(name) {
+      const e = this.lists.effects.find(x => x.name === name);
       return e ? e.color : "#fff";
+    },
+    getMultiplier(name) {
+      const e = this.lists.effects.find(x => x.name === name);
+      return e ? e.multiplier : 0;
     },
     addInclude() {
       if (this.newInclude) {
@@ -106,18 +107,28 @@ createApp({
     },
     async solve() {
       this.result = null;
-      const payload = {
-        base: this.form.base,
-        include: this.form.include,
-        exclude: this.form.exclude,
-      };
-      const res = await fetch("/solve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      let res;
+      try {
+        res = await fetch("/solve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            base: this.form.base,
+            include: this.form.include,
+            exclude: this.form.exclude
+          })
+        });
+      } catch (err) {
+        this.result = { success: false, message: err.message };
+        return;
+      }
+      if (!res.ok) {
+        const err = await res.text();
+        this.result = { success: false, message: err || res.statusText };
+        return;
+      }
       this.result = await res.json();
-    },
+    }
   },
   mounted() {
     this.fetchLists();

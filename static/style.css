@@ -1,6 +1,6 @@
 /* style.css */
 
-/* Make whole page the same dark background */
+/* page background matches container */
 body {
   margin: 0;
   background: #222;
@@ -8,7 +8,7 @@ body {
   font-family: sans-serif;
 }
 
-/* Centered container with min/max width */
+/* container width constraints */
 .dark-theme {
   margin: 1rem auto;
   padding: 1rem;
@@ -26,7 +26,7 @@ body {
   margin-bottom: 1rem;
 }
 
-/* Base selector */
+/* Base selector + innates */
 .base-selector {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -37,10 +37,17 @@ body {
   color: #ddd;
   border: 1px solid #555;
   margin-left: 0.5em;
-  min-width: 150px;
+}
+.innate-effects {
+  margin-top: 0.5em;
+}
+.innate-eff {
+  display: inline-block;
+  margin: 0 0.5em;
+  font-size: 0.9em;
 }
 
-/* Sections side-by-side */
+/* Include / Exclude */
 .sections {
   display: flex;
   gap: 1rem;
@@ -56,8 +63,6 @@ body {
   margin-top: 0;
   color: #aff;
 }
-
-/* Dropdown picker fills width */
 .section > select {
   width: 100%;
   margin-bottom: 0.75em;
@@ -69,7 +74,7 @@ body {
   cursor: pointer;
 }
 
-/* Selected-list expands vertical size (no scrollbar) */
+/* Selected-list expands vertically */
 .sel-list {
   background: #333;
   padding: 0.5em;
@@ -78,13 +83,13 @@ body {
   margin: 0 0 0.75em 0;
 }
 
-/* Indented effect items with colored stripe */
+/* List items with colored stripe */
 .sel-list li {
   display: flex;
   align-items: center;
   margin-bottom: 0.4em;
   border: 1px solid #444;
-  border-left: 4px solid #fff; /* overridden inline */
+  border-left: 4px solid #fff;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -96,7 +101,7 @@ body {
   padding: 0.4em 0.6em;
 }
 
-/* Remove button flush end-cap */
+/* Remove button as flush end-cap */
 .remove-btn {
   background: #a33;
   color: #fff;
@@ -147,7 +152,7 @@ body {
   background: #6b6;
 }
 
-/* Result panel */
+/* Result */
 .result {
   background: #2a2a2a;
   padding: 1rem;
@@ -158,13 +163,25 @@ body {
   margin-top: 0;
   color: #9f9;
 }
+
+/* two‐column result */
+.result .cols {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.result .col {
+  flex: 1 1 45%;
+}
 .final-effects {
   list-style: none;
   padding: 0;
+  margin: 0.5em 0;
 }
 .final-effects li {
   margin-bottom: 0.3em;
 }
 .error {
   color: #f88;
+  padding: 0.5em;
 }
