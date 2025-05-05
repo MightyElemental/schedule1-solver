@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Schedule I Recipe Solver</title>
   <link rel="stylesheet" href="/static/style.css" />
-</head>
+</head>  
 <body>
   <div id="app" class="dark-theme">
     <h1>Schedule I Recipe Solver</h1>
@@ -88,7 +89,7 @@
     <!-- Clear All + Solve on same row -->
     <div class="action-row">
       <button class="clear-all-btn" @click="clearAll()">Clear All</button>
-      <button class="solve-btn"     @click="solve()">Solve</button>
+      <button class="solve-btn" @click="solve()" :disabled="loading">{{ solveBtnText }}</button>
     </div>
 
     <!-- Result -->
@@ -146,6 +147,17 @@
           class="modal-content"
           :class="{ horizontal: isHorizontal, vertical: !isHorizontal }"
         >
+          <!-- modal title -->
+          <h3 class="modal-title">Steps for {{ form.base }}</h3>
+
+          <button
+            class="modal-close-btn"
+            aria-label="Close modal"
+            @click="showTrace = false"
+          >
+            ×
+          </button>
+
           <div
             ref="scroller"
             class="modal-scroll"
@@ -154,7 +166,7 @@
           >
             <!-- BASE CARD -->
             <div class="step-card">
-              <div class="step-badge">Base</div>
+              <div class="step-badge">{{ form.base }}</div>
               <ul class="effects-list">
                 <li
                   v-for="e in lists.bases.find(b=>b.name===form.base).effects"
@@ -184,6 +196,7 @@
               <!-- NEXT CARD -->
               <div class="step-card">
                 <div class="step-badge">{{ idx + 1 }}</div>
+
                 <ul class="effects-list">
                   <li
                     v-for="e in effects"
@@ -194,7 +207,26 @@
                     {{ e }}
                   </li>
                 </ul>
-              </div>
+                
+                <!-- profit badge (click toggles details) -->
+                <div
+                  class="step-profit"
+                  :class="{ negative: stepCosts[idx+1].profit < 0, expanded: isExpanded(idx) }"
+                  @click="toggleStep(idx)"
+                >
+                  Profit: ${{ stepCosts[idx+1].profit }}
+                  ({{ stepCosts[idx+1].profitPct }}%)
+                </div>
+
+                <!-- expandable details -->
+                <transition name="expand">
+                  <div v-if="isExpanded(idx)" class="step-details">
+                    <p>Running cost: ${{ stepCosts[idx+1].cost }}</p>
+                    <p>Fair price:   ${{ stepCosts[idx+1].sale }}</p>
+                  </div>
+                </transition>
+
+              </div>              
             </template>
           </div>
 

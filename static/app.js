@@ -10,12 +10,17 @@ createApp({
       newExclude: "",
       result: null,
       showTrace: false,
+      loading: false,
+      expandedSteps: [],
       aspect: { w: window.innerWidth, h: window.innerHeight },
     };
   },
   computed: {
     isHorizontal() {
       return this.aspect.w > this.aspect.h;
+    },
+    solveBtnText() {
+      return this.loading ? "Solving…" : "Solve";
     },
     // sort dropdowns by descending multiplier
     availableInclude() {
@@ -65,6 +70,41 @@ createApp({
         basePrice, ingredients, ingredientsTotal,
         totalCost, finalEffects, sellPrice
       };
+    },
+    stepCosts() {
+      if (!this.result?.success) return [];
+      const costs = [];
+      const baseObj = this.lists.bases.find(b => b.name === this.form.base);
+      const basePrice = baseObj.value;
+      // innate multipliers sum
+      const innateSum = baseObj.effects
+        .reduce((s,e) => s + this.getMultiplier(e), 0);
+      const baseSale = Math.round(basePrice * (1 + innateSum));
+      const baseProfit = baseSale - basePrice;
+      const baseProfitPct = Math.round((baseProfit / basePrice)*100);
+      costs.push({
+        cost: basePrice,
+        sale: baseSale,
+        profit: baseProfit,
+        profitPct: baseProfitPct
+      });
+      // now for each ingredient step i
+      let runningCost = basePrice;
+      this.result.ingredients.forEach((ing, i) => {
+        const price = this.lists.ingredients
+          .find(x => x.name === ing).price;
+        runningCost += price;
+        const effects = this.result.trace[i];
+        const multSum = effects
+          .reduce((s,e) => s + this.getMultiplier(e), 0);
+        const sale = Math.round(basePrice * (1 + multSum));
+        const profit = sale - runningCost;
+        const profitPct = runningCost > 0
+          ? Math.round((profit/runningCost)*100)
+          : 0;
+        costs.push({ cost: runningCost, sale, profit, profitPct });
+      });
+      return costs;
     }
   },
   methods: {
@@ -137,9 +177,9 @@ createApp({
     async solve() {
       this.showTrace = false;
       this.result = null;
-      let res;
+      this.loading = true;
       try {
-        res = await fetch("/solve", {
+        const res = await fetch("/solve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -148,39 +188,67 @@ createApp({
             exclude: this.form.exclude
           })
         });
+        this.loading = false;
+        if (!res.ok) {
+          const err = await res.text();
+          this.result = { success: false, message: err || res.statusText };
+          return;
+        }
+        this.result = await res.json();
       } catch (err) {
+        this.loading = false;
         this.result = { success: false, message: err.message };
-        return;
       }
-      if (!res.ok) {
-        const err = await res.text();
-        this.result = { success: false, message: err || res.statusText };
-        return;
+    },
+    toggleStep(idx) {
+      const i = this.expandedSteps.indexOf(idx);
+      if (i > -1) {
+        this.expandedSteps.splice(i, 1);
+      } else {
+        this.expandedSteps.push(idx);
       }
-      this.result = await res.json();
+    },
+    isExpanded(idx) {
+      return this.expandedSteps.includes(idx);
     },
     scrollNext() {
       const sc = this.$refs.scroller;
       if (!sc) return;
-      const delta = this.isHorizontal
-        ? sc.clientWidth * 0.8
-        : sc.clientHeight * 0.8;
+      const children = sc.children;
+      if (!children.length) return;
+      const card = children[0];
+      const style = window.getComputedStyle(sc);
+      const gap = parseFloat(style.gap)
+               || parseFloat(style.columnGap)
+               || parseFloat(style.rowGap)
+               || 0;
+      const step = this.isHorizontal
+        ? card.offsetWidth + gap
+        : card.offsetHeight + gap;
       if (this.isHorizontal) {
-        sc.scrollBy({ left: delta, behavior: "smooth" });
+        sc.scrollBy({ left: step, behavior: "smooth" });
       } else {
-        sc.scrollBy({ top: delta, behavior: "smooth" });
+        sc.scrollBy({ top: step, behavior: "smooth" });
       }
     },
     scrollPrev() {
       const sc = this.$refs.scroller;
       if (!sc) return;
-      const delta = this.isHorizontal
-        ? sc.clientWidth * 0.8
-        : sc.clientHeight * 0.8;
+      const children = sc.children;
+      if (!children.length) return;
+      const card = children[0];
+      const style = window.getComputedStyle(sc);
+      const gap = parseFloat(style.gap)
+               || parseFloat(style.columnGap)
+               || parseFloat(style.rowGap)
+               || 0;
+      const step = this.isHorizontal
+        ? -(card.offsetWidth + gap)
+        : -(card.offsetHeight + gap);
       if (this.isHorizontal) {
-        sc.scrollBy({ left: -delta, behavior: "smooth" });
+        sc.scrollBy({ left: step, behavior: "smooth" });
       } else {
-        sc.scrollBy({ top: -delta, behavior: "smooth" });
+        sc.scrollBy({ top: step, behavior: "smooth" });
       }
     },
   },
