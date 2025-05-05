@@ -45,8 +45,8 @@ def get_lists():
     ]
     # ingredients
     ingredients = [
-        {"name": name, "price": price, "effect": eff}
-        for name, (price, eff) in rules.ingredients.items()
+        {"name": name, "price": price, "effect": eff, "icon_url": icon_url}
+        for name, (price, eff, icon_url) in rules.ingredients.items()
     ]
     # effects
     effects = [

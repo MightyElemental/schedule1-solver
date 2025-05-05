@@ -15,15 +15,15 @@ plain_products: Dict[str, Tuple[int, List[str]]] = {}
 
 # List of all ingredients
 # ingredient -> (price, new_effect)
-ingredients: Dict[str, Tuple[int, str]] = {}
+ingredients: Dict[str, Tuple[int, str, str]] = {}
 
 # List of all possible effects (excluding "base")
 # effect -> (multiplier, hex_color)
 effects: Dict[str, Tuple[float, str]] = {}
 
-# Combination rules: (current_effect, ingredient) -> (new_effect, if_other_missing)
+# Combination rules: (current_effect, ingredient) -> (new_effect, if_other_missing, if_other_present)
 # If no rule applies, the effect carries over unchanged.
-rules: Dict[Tuple[str, str], Tuple[str, Optional[str]]] = {}
+rules: Dict[Tuple[str, str], Tuple[str, Optional[str], Optional[str]]] = {}
 
 def load_definitions():
     load_products()
@@ -43,11 +43,12 @@ def load_products():
 
 def load_rules():
     df = pd.read_csv("csv/rules.csv", delimiter=",", header=0)
+    df = df.replace({nan: None})
     for _, row in df.iterrows():
         rules[(
             str(row.Replaces_Existing_Effect).lower(),
             str(row.Ingredient).lower()
-        )] = (row.Effect, row.If_Other_Missing)
+        )] = (row.Effect, row.If_Other_Missing, row.If_Other_Present)
 
 def load_effects():
     df = pd.read_csv("csv/effects.csv", delimiter=",", header=0)
@@ -63,6 +64,7 @@ def load_ingredients():
         ingredients[str(row.Name)] = (
             int(row.Price),
             str(row.Effect),
+            str(row.IconURL),
         )
 
 
@@ -88,14 +90,22 @@ def mutate(current: List[str], ingredient: str) -> List[str]:
             raise ValueError(f"No such effect found: {curr_eff}")
 
         key: Tuple = (curr_eff.lower(), ingredient.lower())
-        new_effect, if_other_missing = rules.get(key, (curr_eff, None))
+        new_effect, if_other_missing, if_other_present = rules.get(key, (curr_eff, None, None))
 
-        if if_other_missing not in current:
-            mutated.append(new_effect)
+        if new_effect in mutated:
+            continue
+        if if_other_present and if_other_present not in current:
+            continue
+        if if_other_missing and if_other_missing in current:
+            continue
+
+        mutated.append(new_effect)
 
 
     # Add the ingredient effect
     # There is an 8-effect limit
     if len(current) < 8:
-        mutated.append(ingredients[ingredient][1])
-    return list(set(mutated))
+        new_effect = ingredients[ingredient][1]
+        if new_effect not in mutated:
+            mutated.append(new_effect)
+    return mutated

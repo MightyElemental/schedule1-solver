@@ -19,6 +19,7 @@ class SolveResponse(BaseModel):
     ingredients: Optional[List[str]] = None
     final_effects: Optional[List[str]] = None
     message: Optional[str] = None
+    trace: Optional[List[List[str]]] = None
 
 def heuristic(current: Set[str], want_inc: Set[str]) -> int:
     """Admissible heuristic = number of desired effects still missing."""
@@ -30,16 +31,21 @@ def solve_recipe(req: SolveRequest) -> SolveResponse:
     want_exc = set(req.exclude)
 
     if base not in rules.plain_products:
-        return SolveResponse(success=False,
-                             message=f"Unknown base '{base}'")
+        return SolveResponse(
+            success=False,
+            message=f"Unknown base '{base}'"
+        )
 
     start = set(rules.plain_products[base][1])
 
     # If we already satisfied everything (and no forbidden in final), done.
     if want_inc.issubset(start) and not (start & want_exc):
-        return SolveResponse(success=True,
-                             ingredients=[],
-                             final_effects=list(start))
+        return SolveResponse(
+            success=True,
+            ingredients=[],
+            final_effects=list(start),
+            trace=[],
+        )
 
     # A* frontier: list of tuples (f_score, g_score, effects_set, path)
     # path is a tuple of ingredient names
@@ -80,10 +86,17 @@ def solve_recipe(req: SolveRequest) -> SolveResponse:
 
             # Check goal
             if want_inc.issubset(new_eff) and not (new_eff & want_exc):
+                # build the trace
+                trace: List[List[str]] = []
+                effects = list(rules.plain_products[base][1])
+                for step in path + (ingr,):
+                    effects = rules.mutate(effects, step)
+                    trace.append(effects.copy())
                 return SolveResponse(
                     success=True,
                     ingredients=list(path) + [ingr],
                     final_effects=list(new_eff),
+                    trace=trace,
                 )
 
             # record and push
