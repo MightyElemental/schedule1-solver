@@ -12,7 +12,7 @@ class SolveRequest(BaseModel):
     base: str
     include: List[str]
     exclude: List[str]
-    max_expansions: Optional[int] = 100_000
+    max_expansions: Optional[int] = 1_000_000
 
 class SolveResponse(BaseModel):
     success: bool
@@ -52,7 +52,7 @@ def solve_recipe(req: SolveRequest) -> SolveResponse:
     visited: Dict[StateKey, int] = {tuple(sorted(start)): 0}
 
     expansions = 0
-    max_exp = req.max_expansions or 100_000
+    max_exp = req.max_expansions or 1_000_000
 
     while frontier:
         f, g, cur_eff, path = heappop(frontier)

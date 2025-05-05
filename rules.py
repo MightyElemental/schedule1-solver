@@ -78,10 +78,6 @@ def mutate(current: List[str], ingredient: str) -> List[str]:
         List[str] - resulting effects after applying the ingredient.
     """
 
-    # There is an 8-effect limit
-    if len(current) >= 8:
-        return current
-
     if ingredient not in ingredients:
         raise ValueError(f"No such ingredient found: {ingredient}")
 
@@ -99,5 +95,7 @@ def mutate(current: List[str], ingredient: str) -> List[str]:
 
 
     # Add the ingredient effect
-    mutated.append(ingredients[ingredient][1])
+    # There is an 8-effect limit
+    if len(current) < 8:
+        mutated.append(ingredients[ingredient][1])
     return list(set(mutated))
