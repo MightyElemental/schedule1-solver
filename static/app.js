@@ -9,9 +9,14 @@ createApp({
       newInclude: "",
       newExclude: "",
       result: null,
+      showTrace: false,
+      aspect: { w: window.innerWidth, h: window.innerHeight },
     };
   },
   computed: {
+    isHorizontal() {
+      return this.aspect.w > this.aspect.h;
+    },
     // sort dropdowns by descending multiplier
     availableInclude() {
       return this.lists.effects
@@ -63,6 +68,30 @@ createApp({
     }
   },
   methods: {
+    onResize() {
+      this.aspect.w = window.innerWidth;
+      this.aspect.h = window.innerHeight;
+    },
+    getIconURL(name) {
+      const ing = this.lists.ingredients.find(x => x.name === name);
+      return ing ? ing.icon_url : "/static/placeholder.png";
+    },
+    previousEffects(idx) {
+      if (idx === 0) {
+        return this.lists.bases.find(b => b.name === this.form.base).effects;
+      } else {
+        return this.result.trace[idx - 1];
+      }
+    },
+    onWheel(evt) {
+      const sc = this.$refs.scroller;
+      if (!sc) return;
+      if (this.isHorizontal) {
+        sc.scrollBy({ left: evt.deltaY, behavior: "auto" });
+      } else {
+        sc.scrollBy({ top: evt.deltaY, behavior: "auto" });
+      }
+    },
     async fetchLists() {
       const res = await fetch("/lists");
       this.lists = await res.json();
@@ -106,6 +135,7 @@ createApp({
       this.clearInclude(); this.clearExclude();
     },
     async solve() {
+      this.showTrace = false;
       this.result = null;
       let res;
       try {
@@ -128,9 +158,37 @@ createApp({
         return;
       }
       this.result = await res.json();
-    }
+    },
+    scrollNext() {
+      const sc = this.$refs.scroller;
+      if (!sc) return;
+      const delta = this.isHorizontal
+        ? sc.clientWidth * 0.8
+        : sc.clientHeight * 0.8;
+      if (this.isHorizontal) {
+        sc.scrollBy({ left: delta, behavior: "smooth" });
+      } else {
+        sc.scrollBy({ top: delta, behavior: "smooth" });
+      }
+    },
+    scrollPrev() {
+      const sc = this.$refs.scroller;
+      if (!sc) return;
+      const delta = this.isHorizontal
+        ? sc.clientWidth * 0.8
+        : sc.clientHeight * 0.8;
+      if (this.isHorizontal) {
+        sc.scrollBy({ left: -delta, behavior: "smooth" });
+      } else {
+        sc.scrollBy({ top: -delta, behavior: "smooth" });
+      }
+    },
   },
   mounted() {
     this.fetchLists();
+    window.addEventListener("resize", this.onResize);
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.onResize);
   }
 }).mount("#app");

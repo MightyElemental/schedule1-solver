@@ -186,3 +186,186 @@ body {
   color: #f88;
   padding: 0.5em;
 }
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width:100vw;
+  height:100vh;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index:1000;
+}
+
+/* Modal content */
+.modal-content {
+  position: relative;
+  background: #333;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Horizontal vs Vertical sizing */
+.modal-content.horizontal {
+  width: 90vw;
+  height: 60vh;
+}
+.modal-content.vertical {
+  width: 60vw;
+  height: 90vh;
+}
+
+/* Scroll container */
+.modal-scroll {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+.modal-scroll.horizontal {
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.modal-scroll.vertical {
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* keep every item (cards & arrows) from shrinking */
+.modal-scroll.horizontal > *,
+.modal-scroll.vertical > * {
+  flex-shrink: 0;
+}
+
+/* Step card */
+.step-card {
+  position: relative;
+  flex: 0 0 200px;
+  background: #444;
+  border-radius: 8px;
+  padding: 2rem 1rem 1rem;
+  box-sizing: border-box;
+  text-align: center;
+}
+.step-card .step-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #8ad;
+  color: #222;
+  padding: 0.2em 0.6em;
+  border-radius: 12px;
+  font-weight: bold;
+}
+.step-card .effects-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.step-card .effects-list li {
+  margin: 0.4em 0;
+}
+
+/* Arrow + ingredient between cards */
+.step-arrow {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  color: #ccc;
+  font-size: 1.2em;
+}
+
+/* Navigation buttons */
+.nav-btn {
+  position: absolute;
+  background: #556;
+  color: #eef;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.2em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-btn.left   { bottom: 1rem; left: 2rem;   }
+.nav-btn.right  { bottom: 1rem; right:2rem;    }
+.nav-btn.up     { right:1.5rem; top: 2rem;     }
+.nav-btn.down   { right:1.5rem; bottom:2rem;   }
+.nav-btn:hover  { background: #667; }
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.result-header h2 { margin: 0; }
+.show-steps-btn {
+  padding: 0.5em 1em;
+  background: #2a6; color: #fff;
+  border: none; border-radius: 4px;
+  cursor: pointer;
+}
+.show-steps-btn:hover { background: #3b7; }
+
+/* highlight newly added effects */
+.effects-list li.new-eff {
+  position: relative;
+}
+.effects-list li.new-eff::before {
+  content: "★";
+  position: absolute;
+  left: 0;
+  color: #fc0;
+  font-size: 0.9em;
+}
+
+/* arrows stacked vertically in modal */
+.step-arrow.horizontal,
+.step-arrow.vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 0.5em;
+}
+.step-arrow .ing-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  margin-bottom: 0.1em;
+}
+.step-arrow .arrow-symbol {
+  font-size: 2em;
+  margin: 0.1em 0;
+}
+/* rotate arrow in vertical mode */
+.step-arrow.vertical .arrow-symbol {
+  transform: rotate(90deg);
+}
+.step-arrow .ing-label {
+  font-size: 0.9em;
+  color: #ddd;
+  text-align: center;
+}
+
+/* widen cards in vertical mode */
+.modal-scroll.vertical .step-card {
+  flex: 0 0 80%;    /* 80% of modal‐content width */
+}
+
+/* allow vertical scroll beyond just arrow buttons */
+.modal-scroll.vertical {
+  overflow-y: auto;
+}

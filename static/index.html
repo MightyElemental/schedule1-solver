@@ -93,7 +93,16 @@
 
     <!-- Result -->
     <div v-if="result" class="result">
-      <h2>Result</h2>
+      <div class="result-header">
+        <h2>Result</h2>
+        <button
+          v-if="result.success"
+          class="show-steps-btn"
+          @click="showTrace = true"
+        >
+          Show Steps
+        </button>
+      </div>
       <div v-if="result.success" class="cols">
         <!-- Left column: costs -->
         <div class="col">
@@ -126,9 +135,98 @@
         <p>Error: {{ result.message }}</p>
       </div>
     </div>
+
+      <!-- TRACE MODAL -->
+      <div
+        v-if="showTrace"
+        class="modal-overlay"
+        @click.self="showTrace = false"
+      >
+        <div
+          class="modal-content"
+          :class="{ horizontal: isHorizontal, vertical: !isHorizontal }"
+        >
+          <div
+            ref="scroller"
+            class="modal-scroll"
+            :class="{ horizontal: isHorizontal, vertical: !isHorizontal }"
+            @wheel.prevent="onWheel"
+          >
+            <!-- BASE CARD -->
+            <div class="step-card">
+              <div class="step-badge">Base</div>
+              <ul class="effects-list">
+                <li
+                  v-for="e in lists.bases.find(b=>b.name===form.base).effects"
+                  :key="e"
+                  :style="{ color: getColor(e) }"
+                >
+                  {{ e }}
+                </li>
+              </ul>
+            </div>
+
+            <template v-for="(effects, idx) in result.trace" :key="idx">
+              <!-- ARROW -->
+              <div
+                class="step-arrow"
+                :class="{ horizontal: isHorizontal, vertical: !isHorizontal }"
+              >
+                <img
+                  class="ing-icon"
+                  :src="getIconURL(result.ingredients[idx])"
+                  alt="icon"
+                />
+                <span class="arrow-symbol">→</span>
+                <span class="ing-label">{{ result.ingredients[idx] }}</span>
+              </div>
+
+              <!-- NEXT CARD -->
+              <div class="step-card">
+                <div class="step-badge">{{ idx + 1 }}</div>
+                <ul class="effects-list">
+                  <li
+                    v-for="e in effects"
+                    :key="e"
+                    :style="{ color: getColor(e) }"
+                    :class="{ 'new-eff': !previousEffects(idx).includes(e) }"
+                  >
+                    {{ e }}
+                  </li>
+                </ul>
+              </div>
+            </template>
+          </div>
+
+          <!-- NAV BUTTONS -->
+          <button
+            v-if="isHorizontal"
+            class="nav-btn left"
+            @click="scrollPrev"
+          >&lt;</button>
+          <button
+            v-if="isHorizontal"
+            class="nav-btn right"
+            @click="scrollNext"
+          >&gt;</button>
+
+          <button
+            v-if="!isHorizontal"
+            class="nav-btn up"
+            @click="scrollPrev"
+          >&uarr;</button>
+          <button
+            v-if="!isHorizontal"
+            class="nav-btn down"
+            @click="scrollNext"
+          >&darr;</button>
+        </div>
+      </div>
+
+
   </div>
 
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>
