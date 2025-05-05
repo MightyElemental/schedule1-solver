@@ -121,10 +121,16 @@ body {
   cursor: pointer;
   border-radius: 3px;
 }
-.clear-all-row {
-  text-align: center;
+
+/* Clear All + Solve on same row */
+.action-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
   margin: 1rem 0;
 }
+
+/* Buttons */
 .clear-all-btn {
   background: #b55;
   color: #fff;
@@ -134,11 +140,6 @@ body {
   border-radius: 3px;
 }
 
-/* Solve button */
-.solve-row {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
 .solve-btn {
   background: #5a5;
   color: #fff;

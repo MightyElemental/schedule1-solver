@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Alchemy Recipe Solver</title>
+  <title>Schedule I Recipe Solver</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <div id="app" class="dark-theme">
-    <h1>Alchemy Recipe Solver</h1>
+    <h1>Schedule I Recipe Solver</h1>
 
     <!-- Base selector + innate effects -->
     <div class="base-selector">
@@ -38,7 +38,8 @@
           <option value="" disabled>-- select effect --</option>
           <option v-for="eff in availableInclude"
                   :key="eff.name"
-                  :value="eff.name">
+                  :value="eff.name"
+                  :style="{ color: eff.color, backgroundColor: '#333' }">
             {{ eff.name }} (×{{ eff.multiplier }})
           </option>
         </select>
@@ -64,7 +65,8 @@
           <option value="" disabled>-- select effect --</option>
           <option v-for="eff in availableExclude"
                   :key="eff.name"
-                  :value="eff.name">
+                  :value="eff.name"
+                  :style="{ color: eff.color, backgroundColor: '#333' }">
             {{ eff.name }} (×{{ eff.multiplier }})
           </option>
         </select>
@@ -83,16 +85,10 @@
       </div>
     </div>
 
-    <!-- Clear All -->
-    <div class="clear-all-row">
-      <button class="clear-all-btn" @click="clearAll()">
-        Clear All
-      </button>
-    </div>
-
-    <!-- Solve -->
-    <div class="solve-row">
-      <button class="solve-btn" @click="solve()">Solve</button>
+    <!-- Clear All + Solve on same row -->
+    <div class="action-row">
+      <button class="clear-all-btn" @click="clearAll()">Clear All</button>
+      <button class="solve-btn"     @click="solve()">Solve</button>
     </div>
 
     <!-- Result -->
@@ -102,8 +98,7 @@
         <!-- Left column: costs -->
         <div class="col">
           <p><strong>Base:</strong> {{ form.base }}
-            (value: ${{ pricing.basePrice }})
-          </p>
+             (value: ${{ pricing.basePrice }})</p>
           <p><strong>Ingredients:</strong></p>
           <ol>
             <li v-for="ing in pricing.ingredients" :key="ing.name">
@@ -124,7 +119,7 @@
             </li>
           </ul>
           <p><strong>Fair Sell Price:</strong>
-            ${{ pricing.sellPrice }}</p>
+             ${{ pricing.sellPrice }}</p>
         </div>
       </div>
       <div v-else class="error">
