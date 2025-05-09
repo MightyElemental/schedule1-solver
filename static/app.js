@@ -252,8 +252,58 @@ createApp({
         sc.scrollBy({ top: step, behavior: "smooth" });
       }
     },
+    saveState() {
+      const state = {
+        form: this.form,
+        expandedSteps: this.expandedSteps
+      };
+      try {
+        localStorage.setItem("schedule1State", JSON.stringify(state));
+      } catch (_) { /* ignore */ }
+    },
+  
+    loadState() {
+      try {
+        const saved = localStorage.getItem("schedule1State");
+        if (!saved) return;
+        const { form, result, expandedSteps } = JSON.parse(saved);
+        if (form) {
+          // only overwrite keys we care about
+          this.form.base           = form.base           ?? this.form.base;
+          this.form.include        = form.include        ?? this.form.include;
+          this.form.exclude        = form.exclude        ?? this.form.exclude;
+          this.form.maxIngredients = form.maxIngredients ?? this.form.maxIngredients;
+        }
+        if (Array.isArray(expandedSteps)) {
+          this.expandedSteps = expandedSteps;
+        }
+      } catch (_) { /* ignore parse errors */ }
+    },
   },
+  watch: {
+    form: {
+      deep: true,
+      handler() {
+        this.saveState();
+      }
+    },
+    result: {
+      deep: true,
+      handler() {
+        this.saveState();
+      }
+    },
+    expandedSteps: {
+      deep: true,
+      handler() {
+        this.saveState();
+      }
+    }
+  },  
   mounted() {
+    // load last UI state (before lists so base may get overridden)
+    this.loadState();
+    // then get fresh data
     this.fetchLists();
     window.addEventListener("resize", this.onResize);
   },
