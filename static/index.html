@@ -88,6 +88,15 @@
 
     <!-- Clear All + Solve on same row -->
     <div class="action-row">
+      <label class="max-ing">
+        Max Ingredients:
+        <input
+          type="number"
+          v-model.number="form.maxIngredients"
+          min="1"
+          max="20"
+        />
+      </label>
       <button class="clear-all-btn" @click="clearAll()">Clear All</button>
       <button class="solve-btn" @click="solve()" :disabled="loading">{{ solveBtnText }}</button>
     </div>

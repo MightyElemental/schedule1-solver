@@ -2,7 +2,7 @@
 from heapq import heappush, heappop
 from typing import Dict, List, Optional, Set, Tuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import rules
 
@@ -13,6 +13,7 @@ class SolveRequest(BaseModel):
     include: List[str]
     exclude: List[str]
     max_expansions: Optional[int] = 1_000_000
+    max_ingredients: Optional[int] = Field(None, description="Maximum number of ingredients to use")
 
 class SolveResponse(BaseModel):
     success: bool
@@ -79,6 +80,10 @@ def solve_recipe(req: SolveRequest) -> SolveResponse:
             new_eff = set(new_eff_list)
             new_g = g + 1
             new_key = tuple(sorted(new_eff))
+
+            max_ing = req.max_ingredients
+            if max_ing is not None and new_g > max_ing:
+                continue
 
             # If we've seen this effect‐set more cheaply, skip
             if visited.get(new_key, 9999) <= new_g:

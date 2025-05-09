@@ -5,7 +5,7 @@ createApp({
   data() {
     return {
       lists: { bases: [], ingredients: [], effects: [] },
-      form: { base: null, include: [], exclude: [] },
+      form: { base: null, include: [], exclude: [], maxIngredients: 20, },
       newInclude: "",
       newExclude: "",
       result: null,
@@ -185,7 +185,8 @@ createApp({
           body: JSON.stringify({
             base: this.form.base,
             include: this.form.include,
-            exclude: this.form.exclude
+            exclude: this.form.exclude,
+            max_ingredients: this.form.maxIngredients,
           })
         });
         this.loading = false;
