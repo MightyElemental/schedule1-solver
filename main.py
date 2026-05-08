@@ -68,6 +68,12 @@ def get_lists():
     })
 
 
+@app.get("/batch-metadata")
+def get_batch_metadata():
+    """Return CSV-backed cultivation metadata for batch calculations."""
+    return JSONResponse({"grow_products": rules.grow_products})
+
+
 @app.post("/solve", response_model=SolveResponse)
 def api_solve(req: SolveRequest):
     """Solve endpoint."""

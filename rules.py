@@ -5,9 +5,23 @@ Defines the base products, ingredients, effects, and combination rules.
 Users should populate these lists/dicts with the full data set.
 """
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, TypedDict
 import pandas as pd
 from numpy import nan
+
+
+class GrowProduct(TypedDict):
+    """Cultivation values for a growable base product."""
+
+    seed_price: int
+    tent_yield: int
+    pot_yield: int
+    pgr_yield_bonus: int
+    soil_price: int
+    pgr_price: int
+    speed_grow_price: int
+    fertilizer_price: int
+
 
 # Base products can have default (innate) effects.
 # products -> (value, innate_effects)
@@ -25,6 +39,9 @@ effects: Dict[str, Tuple[float, str]] = {}
 # If no rule applies, the effect carries over unchanged.
 rules: Dict[Tuple[str, str], str] = {}
 
+# Cultivation metadata for growable products.
+grow_products: Dict[str, GrowProduct] = {}
+
 
 def load_definitions() -> None:
     """Load product, rule, effect, and ingredient definitions from CSV files."""
@@ -32,6 +49,7 @@ def load_definitions() -> None:
     load_rules()
     load_effects()
     load_ingredients()
+    load_grow_products()
 
 
 def load_products() -> None:
@@ -76,6 +94,22 @@ def load_ingredients() -> None:
             str(row.Effect),
             str(row.IconURL),
         )
+
+
+def load_grow_products() -> None:
+    """Load cultivation costs and yields from ``csv/grow_products.csv``."""
+    df = pd.read_csv("csv/grow_products.csv", delimiter=",", header=0)
+    for _, row in df.iterrows():
+        grow_products[str(row.Name)] = {
+            "seed_price": int(row.SeedPrice),
+            "tent_yield": int(row.TentYield),
+            "pot_yield": int(row.PotYield),
+            "pgr_yield_bonus": int(row.PGRYieldBonus),
+            "soil_price": int(row.SoilPrice),
+            "pgr_price": int(row.PGRPrice),
+            "speed_grow_price": int(row.SpeedGrowPrice),
+            "fertilizer_price": int(row.FertilizerPrice),
+        }
 
 
 def mutate(current: List[str], ingredient: str) -> List[str]:

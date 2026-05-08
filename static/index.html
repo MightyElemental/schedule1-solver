@@ -246,21 +246,21 @@
           <label>
             Grow Setup
             <select v-model="batchGrow.container">
-              <option value="tent">Grow Tent ({{ batchGrow.pgr ? 12 : 8 }})</option>
-              <option value="pot">Pot ({{ batchGrow.pgr ? 16 : 12 }})</option>
+              <option value="tent">Grow Tent ({{ selectedGrowYield("tent") }})</option>
+              <option value="pot">Pot ({{ selectedGrowYield("pot") }})</option>
             </select>
           </label>
           <label class="check-row">
             <input type="checkbox" v-model="batchGrow.pgr" />
-            PGR (+4 yield)
+            PGR (+{{ selectedPgrYieldBonus() }} yield)
           </label>
           <label class="check-row">
             <input type="checkbox" v-model="batchGrow.speedGrow" />
-            Speed Grow ($30)
+            Speed Grow (${{ selectedSupplementPrice("speed_grow_price") }})
           </label>
           <label class="check-row">
             <input type="checkbox" v-model="batchGrow.fertilizer" />
-            Fertilizer ($30)
+            Fertilizer (${{ selectedSupplementPrice("fertilizer_price") }})
           </label>
         </div>
 

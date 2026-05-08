@@ -5,6 +5,7 @@ createApp({
   data() {
     return {
       lists: { bases: [], ingredients: [], effects: [], rules: [] },
+      batchMetadata: { grow_products: {} },
       form: { base: null, include: [], exclude: [], maxIngredients: 20, },
       newInclude: "",
       newExclude: "",
@@ -184,13 +185,14 @@ createApp({
       };
 
       this.batchRows.forEach(({ recipe, quantity }) => {
-        if (this.isWeedBase(recipe.base)) {
-          const plants = this.plantsNeeded(quantity);
-          addItem(`${recipe.base} Seed`, plants, this.seedPrice(recipe.base));
-          addItem("Soil", plants, 10);
-          if (this.batchGrow.pgr) addItem("PGR", plants, 30);
-          if (this.batchGrow.speedGrow) addItem("Speed Grow", plants, 30);
-          if (this.batchGrow.fertilizer) addItem("Fertilizer", plants, 30);
+        if (this.isGrowableBase(recipe.base)) {
+          const product = this.growProduct(recipe.base);
+          const plants = this.plantsNeeded(recipe.base, quantity);
+          addItem(`${recipe.base} Seed`, plants, product.seed_price);
+          addItem("Soil", plants, product.soil_price);
+          if (this.batchGrow.pgr) addItem("PGR", plants, product.pgr_price);
+          if (this.batchGrow.speedGrow) addItem("Speed Grow", plants, product.speed_grow_price);
+          if (this.batchGrow.fertilizer) addItem("Fertilizer", plants, product.fertilizer_price);
         } else {
           const base = this.getBase(recipe.base);
           addItem(recipe.base, quantity, base ? base.value : 0);
@@ -269,6 +271,11 @@ createApp({
       if (this.lists.bases.length) {
         this.form.base = this.lists.bases[0].name;
       }
+      await this.fetchBatchMetadata();
+    },
+    async fetchBatchMetadata() {
+      const res = await fetch("/batch-metadata");
+      this.batchMetadata = await res.json();
     },
     loadFavorites() {
       try {
@@ -647,7 +654,7 @@ createApp({
       this.setBatchQuantity(recipe.id, this.batchQuantity(recipe.id) + amount);
     },
     batchSizeForRecipe(recipe) {
-      return this.isWeedBase(recipe.base) ? this.plantYield() : 1;
+      return this.isGrowableBase(recipe.base) ? this.plantYield(recipe.base) : 1;
     },
     mutateEffects(current, ingredientName) {
       const ingredient = this.getIngredient(ingredientName);
@@ -706,32 +713,48 @@ createApp({
       const details = this.buildRecipeDetails(recipe.base, recipe.ingredients, recipe.name);
       return details ? details.finalEffects : [];
     },
-    isWeedBase(baseName) {
-      return ["OG Kush", "Sour Diesel", "Green Crack", "Granddaddy Purple"].includes(baseName);
+    isGrowableBase(baseName) {
+      return Boolean(this.growProduct(baseName));
     },
-    seedPrice(baseName) {
-      return {
-        "OG Kush": 30,
-        "Sour Diesel": 35,
-        "Green Crack": 40,
-        "Granddaddy Purple": 45,
-      }[baseName] || 0;
+    growProduct(baseName) {
+      return this.batchMetadata.grow_products?.[baseName] || null;
     },
-    plantYield() {
-      const baseYield = this.batchGrow.container === "pot" ? 12 : 8;
-      return baseYield + (this.batchGrow.pgr ? 4 : 0);
+    selectedGrowProduct() {
+      return this.batchRows.find(row => this.growProduct(row.recipe.base))?.recipe.base
+        || Object.keys(this.batchMetadata.grow_products || {})[0]
+        || "";
     },
-    plantsNeeded(quantity) {
-      return Math.ceil(quantity / this.plantYield());
+    selectedGrowYield(container) {
+      const product = this.growProduct(this.selectedGrowProduct());
+      if (!product) return 0;
+      const baseYield = container === "pot" ? product.pot_yield : product.tent_yield;
+      return baseYield + (this.batchGrow.pgr ? product.pgr_yield_bonus : 0);
+    },
+    selectedPgrYieldBonus() {
+      return this.growProduct(this.selectedGrowProduct())?.pgr_yield_bonus || 0;
+    },
+    selectedSupplementPrice(field) {
+      return this.growProduct(this.selectedGrowProduct())?.[field] || 0;
+    },
+    plantYield(baseName) {
+      const product = this.growProduct(baseName);
+      if (!product) return 1;
+      const baseYield = this.batchGrow.container === "pot" ? product.pot_yield : product.tent_yield;
+      return baseYield + (this.batchGrow.pgr ? product.pgr_yield_bonus : 0);
+    },
+    plantsNeeded(baseName, quantity) {
+      return Math.ceil(quantity / this.plantYield(baseName));
     },
     growBaseCost(baseName, quantity) {
-      const plants = this.plantsNeeded(quantity);
+      const product = this.growProduct(baseName);
+      if (!product) return 0;
+      const plants = this.plantsNeeded(baseName, quantity);
       const supplementCost = [
-        this.batchGrow.pgr,
-        this.batchGrow.speedGrow,
-        this.batchGrow.fertilizer,
-      ].filter(Boolean).length * 30;
-      return plants * (this.seedPrice(baseName) + 10 + supplementCost);
+        this.batchGrow.pgr ? product.pgr_price : 0,
+        this.batchGrow.speedGrow ? product.speed_grow_price : 0,
+        this.batchGrow.fertilizer ? product.fertilizer_price : 0,
+      ].reduce((sum, price) => sum + price, 0);
+      return plants * (product.seed_price + product.soil_price + supplementCost);
     },
     recipeBatchFinancials(recipe, quantity) {
       const unitFinancials = this.recipeFinancials(recipe);
@@ -740,7 +763,7 @@ createApp({
         return sum + (ingredient ? ingredient.price : 0);
       }, 0) * quantity;
       const base = this.getBase(recipe.base);
-      const baseCost = this.isWeedBase(recipe.base)
+      const baseCost = this.isGrowableBase(recipe.base)
         ? this.growBaseCost(recipe.base, quantity)
         : (base ? base.value * quantity : 0);
       const totalCost = baseCost + ingredientCost;
