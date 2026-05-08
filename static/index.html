@@ -31,17 +31,44 @@
           type="button"
           class="sidebar-close-btn"
           aria-label="Close recipes"
-          @click="showRecipesSidebar = false"
+          @click="closeRecipesSidebar"
         >
           ×
         </button>
       </div>
 
+      <form class="share-import" @submit.prevent="importSharedRecipe">
+        <label for="share-code-import">
+          Import Code
+          <textarea
+            id="share-code-import"
+            v-model="importShareCode"
+            rows="2"
+          ></textarea>
+        </label>
+        <div class="share-row">
+          <button type="submit" :disabled="!importShareCode.trim()">Import</button>
+          <span v-if="importMessage" class="share-message">{{ importMessage }}</span>
+        </div>
+      </form>
+
       <p v-if="favorites.length === 0" class="recipes-empty">
         Saved recipes will appear here.
       </p>
 
-      <ul v-else class="favorite-recipes">
+      <div v-if="shareCode" class="share-export">
+        <div class="share-export-title">{{ shareRecipeName }}</div>
+        <textarea readonly rows="3" :value="shareCode"></textarea>
+        <div class="share-row">
+          <button type="button" @click="copyShareCode">Copy</button>
+          <button type="button" @click="shareCode = ''; shareRecipeName = ''; shareMessage = ''">
+            Close
+          </button>
+          <span v-if="shareMessage" class="share-message">{{ shareMessage }}</span>
+        </div>
+      </div>
+
+      <ul v-if="favorites.length > 0" class="favorite-recipes">
         <li
           v-for="recipe in favorites"
           :key="recipe.id"
@@ -70,7 +97,7 @@
             class="favorite-summary"
             @click="toggleFavoriteDetails(recipe.id)"
           >
-            <span class="favorite-title">{{ recipe.name }}</span>
+            <span class="favorite-title" :title="recipe.name">{{ recipe.name }}</span>
             <span class="favorite-meta">
               {{ recipe.base }} · {{ recipe.ingredients.length }} ingredients
             </span>
@@ -111,7 +138,8 @@
             <button type="button" @click.stop="loadFavorite(recipe)">Load</button>
             <button type="button" @click.stop="showFavoriteTrace(recipe)">Steps</button>
             <button type="button" @click.stop="startFavoriteRename(recipe)">Rename</button>
-            <button type="button" class="danger" @click.stop="removeFavorite(recipe.id)">
+            <button type="button" @click.stop="showShareCode(recipe)">Share</button>
+            <button type="button" class="danger delete-btn" @click.stop="removeFavorite(recipe.id)">
               Delete
             </button>
           </div>

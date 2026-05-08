@@ -21,6 +21,11 @@ createApp({
       expandedFavoriteIds: [],
       editingFavoriteId: null,
       editingFavoriteName: "",
+      shareCode: "",
+      shareRecipeName: "",
+      shareMessage: "",
+      importShareCode: "",
+      importMessage: "",
       loading: false,
       expandedSteps: [],
       aspect: { w: window.innerWidth, h: window.innerHeight },
@@ -286,6 +291,170 @@ createApp({
         this.saveFavorites();
       }
       this.cancelFavoriteRename();
+    },
+    createBitWriter() {
+      return {
+        bytes: [],
+        bitOffset: 0,
+        write(value, bitCount) {
+          for (let bit = bitCount - 1; bit >= 0; bit -= 1) {
+            if (this.bitOffset % 8 === 0) {
+              this.bytes.push(0);
+            }
+            const byteIndex = this.bytes.length - 1;
+            const bitIndex = 7 - (this.bitOffset % 8);
+            this.bytes[byteIndex] |= ((value >> bit) & 1) << bitIndex;
+            this.bitOffset += 1;
+          }
+        },
+      };
+    },
+    createBitReader(bytes) {
+      return {
+        bytes,
+        bitOffset: 0,
+        read(bitCount) {
+          let value = 0;
+          for (let bit = 0; bit < bitCount; bit += 1) {
+            const byteIndex = Math.floor(this.bitOffset / 8);
+            if (byteIndex >= this.bytes.length) {
+              throw new Error("Share code is incomplete.");
+            }
+            const bitIndex = 7 - (this.bitOffset % 8);
+            value = (value << 1) | ((this.bytes[byteIndex] >> bitIndex) & 1);
+            this.bitOffset += 1;
+          }
+          return value;
+        },
+      };
+    },
+    encodeBase64Url(bytes) {
+      const binary = String.fromCharCode(...bytes);
+      return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    },
+    decodeBase64Url(value) {
+      const padded = value.replace(/-/g, "+").replace(/_/g, "/")
+        .padEnd(Math.ceil(value.length / 4) * 4, "=");
+      return [...atob(padded)].map(char => char.charCodeAt(0));
+    },
+    recipeToShareCode(recipe) {
+      const baseIndex = this.lists.bases.findIndex(base => base.name === recipe.base);
+      const ingredientIndexes = recipe.ingredients.map(ingredient => (
+        this.lists.ingredients.findIndex(item => item.name === ingredient)
+      ));
+      const nameBytes = [...new TextEncoder().encode(recipe.name)];
+
+      if (baseIndex < 0 || baseIndex > 31 || ingredientIndexes.some(index => index < 0 || index > 31)) {
+        throw new Error("Recipe contains unknown data.");
+      }
+      if (ingredientIndexes.length > 31) {
+        throw new Error("Recipe has too many ingredients to share.");
+      }
+      if (nameBytes.length > 255) {
+        throw new Error("Recipe name is too long to share.");
+      }
+
+      const writer = this.createBitWriter();
+      writer.write(1, 4);
+      writer.write(baseIndex, 5);
+      writer.write(ingredientIndexes.length, 5);
+      ingredientIndexes.forEach(index => writer.write(index, 5));
+      writer.write(nameBytes.length, 8);
+      nameBytes.forEach(byte => writer.write(byte, 8));
+      return `S1R.${this.encodeBase64Url(writer.bytes)}`;
+    },
+    shareCodeToRecipe(code) {
+      const trimmed = code.trim();
+      const encoded = trimmed.startsWith("S1R.") ? trimmed.slice(4) : trimmed;
+      const reader = this.createBitReader(this.decodeBase64Url(encoded));
+      const version = reader.read(4);
+      if (version !== 1) {
+        throw new Error("Unsupported share code version.");
+      }
+
+      const base = this.lists.bases[reader.read(5)];
+      const ingredientCount = reader.read(5);
+      const ingredients = [];
+      for (let index = 0; index < ingredientCount; index += 1) {
+        const ingredient = this.lists.ingredients[reader.read(5)];
+        if (!ingredient) {
+          throw new Error("Share code references an unknown ingredient.");
+        }
+        ingredients.push(ingredient.name);
+      }
+
+      if (!base) {
+        throw new Error("Share code references an unknown base.");
+      }
+
+      const nameLength = reader.read(8);
+      const nameBytes = [];
+      for (let index = 0; index < nameLength; index += 1) {
+        nameBytes.push(reader.read(8));
+      }
+      const name = new TextDecoder().decode(new Uint8Array(nameBytes)).trim();
+      return {
+        id: this.createFavoriteId(),
+        name: name || `${base.name} Recipe`,
+        base: base.name,
+        ingredients,
+        include: [],
+        exclude: [],
+      };
+    },
+    showShareCode(recipe) {
+      try {
+        this.shareCode = this.recipeToShareCode(recipe);
+        this.shareRecipeName = recipe.name;
+        this.shareMessage = "";
+      } catch (err) {
+        this.shareCode = "";
+        this.shareRecipeName = "";
+        this.shareMessage = err.message;
+      }
+    },
+    async copyShareCode() {
+      if (!this.shareCode) return;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(this.shareCode);
+        } else {
+          const textArea = document.createElement("textarea");
+          textArea.value = this.shareCode;
+          textArea.setAttribute("readonly", "");
+          textArea.style.position = "fixed";
+          textArea.style.opacity = "0";
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textArea);
+        }
+        this.shareMessage = "Copied";
+      } catch (_) {
+        this.shareMessage = "Select and copy manually";
+      }
+    },
+    closeRecipesSidebar() {
+      this.showRecipesSidebar = false;
+      this.importMessage = "";
+      this.shareMessage = "";
+    },
+    importSharedRecipe() {
+      this.importMessage = "";
+      try {
+        const recipe = this.shareCodeToRecipe(this.importShareCode);
+        if (this.favorites.some(existing => this.sameRecipe(existing, recipe.base, recipe.ingredients))) {
+          this.importMessage = "Already exists";
+          return;
+        }
+        this.favorites.push(recipe);
+        this.saveFavorites();
+        this.importShareCode = "";
+        this.importMessage = "Imported";
+        this.animateRecipeTab();
+      } catch (err) {
+        this.importMessage = err.message;
+      }
     },
     sameRecipe(recipe, base, ingredients) {
       if (recipe.base !== base || recipe.ingredients.length !== ingredients.length) {

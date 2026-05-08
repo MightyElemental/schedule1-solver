@@ -183,6 +183,65 @@ body {
   border-radius: 4px;
   color: #aaa;
 }
+.share-import,
+.share-export {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+}
+.share-import label {
+  display: grid;
+  gap: 0.35rem;
+  color: #aff;
+  font-size: 0.85em;
+  font-weight: bold;
+}
+.share-import textarea,
+.share-export textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 0.55em;
+  background: #252525;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 3px;
+  font-family: monospace;
+}
+.share-export-title {
+  color: #fff;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+.share-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.share-row button {
+  padding: 0.45em 0.7em;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.share-row button:hover:not(:disabled) {
+  border-color: #9fc;
+}
+.share-row button:disabled {
+  color: #777;
+  cursor: default;
+}
+.share-message {
+  color: #cfc;
+  font-size: 0.85em;
+}
 .favorite-recipes {
   margin: 0;
   padding: 0;
@@ -244,6 +303,9 @@ body {
 .favorite-title {
   color: #fff;
   font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .favorite-meta {
   color: #aaa;
@@ -290,7 +352,7 @@ body {
   padding: 0 0.7rem 0.7rem;
 }
 .favorite-actions button {
-  flex: 1;
+  flex: 1 1 4rem;
   min-width: 4rem;
   padding: 0.45em 0.6em;
   background: #333;
@@ -301,6 +363,11 @@ body {
 }
 .favorite-actions button:hover {
   border-color: #9fc;
+}
+.favorite-actions .delete-btn {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding-inline: 0.8em;
 }
 .favorite-actions .danger:hover {
   border-color: #f88;
