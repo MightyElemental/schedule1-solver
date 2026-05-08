@@ -4,7 +4,7 @@
 main.py
 
 FastAPI application exposing:
- - GET /lists       -> available bases, ingredients, effects
+ - GET /lists       -> available bases, ingredients, effects, rules
  - POST /solve      -> solve for a recipe
  - GET /            -> serve the SPA
 """
@@ -39,6 +39,7 @@ def get_lists():
       - bases: {name, value, effects: [string,…]}
       - ingredients: {name, price, effect}
       - effects: {name, multiplier, color}
+      - rules: {current_effect, ingredient, effect}
     """
     # bases
     bases = [
@@ -55,10 +56,15 @@ def get_lists():
         {"name": name, "multiplier": mult, "color": color}
         for name, (mult, color) in rules.effects.items()
     ]
+    rule_defs = [
+        {"current_effect": current, "ingredient": ingredient, "effect": effect}
+        for (current, ingredient), effect in rules.rules.items()
+    ]
     return JSONResponse({
         "bases": bases,
         "ingredients": ingredients,
-        "effects": effects
+        "effects": effects,
+        "rules": rule_defs
     })
 
 

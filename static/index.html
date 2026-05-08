@@ -8,6 +8,61 @@
 </head>  
 <body>
   <div id="app" class="dark-theme">
+    <button
+      type="button"
+      class="recipes-tab"
+      :class="{ pulse: recipeTabPulse }"
+      :aria-expanded="showRecipesSidebar.toString()"
+      @click="showRecipesSidebar = true"
+    >
+      <span class="recipes-tab-icon">★</span>
+      <span class="recipes-tab-text">Recipes</span>
+      <span class="recipes-tab-count">{{ favorites.length }}</span>
+    </button>
+
+    <aside
+      class="recipes-sidebar"
+      :class="{ open: showRecipesSidebar }"
+      aria-label="Saved recipes"
+    >
+      <div class="recipes-header">
+        <h2>Recipes</h2>
+        <button
+          type="button"
+          class="sidebar-close-btn"
+          aria-label="Close recipes"
+          @click="showRecipesSidebar = false"
+        >
+          ×
+        </button>
+      </div>
+
+      <p v-if="favorites.length === 0" class="recipes-empty">
+        Saved recipes will appear here.
+      </p>
+
+      <ul v-else class="favorite-recipes">
+        <li v-for="recipe in favorites" :key="recipe.id" class="favorite-recipe">
+          <div class="favorite-title">{{ recipe.name }}</div>
+          <div class="favorite-meta">
+            {{ recipe.base }} · {{ recipe.ingredients.length }} ingredients
+          </div>
+          <ol class="favorite-ingredients">
+            <li v-for="ingredient in recipe.ingredients" :key="ingredient">
+              {{ ingredient }}
+            </li>
+          </ol>
+          <div class="favorite-actions">
+            <button type="button" @click="loadFavorite(recipe)">Load</button>
+            <button type="button" @click="showFavoriteTrace(recipe)">Steps</button>
+            <button type="button" class="danger" @click="removeFavorite(recipe.id)">
+              Delete
+            </button>
+          </div>
+        </li>
+      </ul>
+    </aside>
+
     <header class="app-header">
       <h1>Schedule I Recipe Solver</h1>
       <div class="settings">
@@ -145,7 +200,7 @@
         <button
           v-if="result.success"
           class="show-steps-btn"
-          @click="showTrace = true"
+          @click="showCurrentTrace"
         >
           Show Steps
         </button>
@@ -185,21 +240,21 @@
 
       <!-- TRACE MODAL -->
       <div
-        v-if="showTrace"
+        v-if="showTrace && traceRecipe"
         class="modal-overlay"
-        @click.self="showTrace = false"
+        @click.self="closeTrace"
       >
         <div
           class="modal-content"
           :class="{ horizontal: isHorizontal, vertical: !isHorizontal }"
         >
           <!-- modal title -->
-          <h3 class="modal-title">Steps for {{ form.base }}</h3>
+          <h3 class="modal-title">Steps for {{ traceRecipe.name }}</h3>
 
           <button
             class="modal-close-btn"
             aria-label="Close modal"
-            @click="showTrace = false"
+            @click="closeTrace"
           >
             ×
           </button>
@@ -212,10 +267,10 @@
           >
             <!-- BASE CARD -->
             <div class="step-card">
-              <div class="step-badge">{{ form.base }}</div>
+              <div class="step-badge">{{ traceRecipe.base }}</div>
               <ul class="effects-list">
                 <li
-                  v-for="e in lists.bases.find(b=>b.name===form.base).effects"
+                  v-for="e in traceRecipe.baseEffects"
                   :key="e"
                   :style="{ color: getColor(e) }"
                 >
@@ -224,7 +279,7 @@
               </ul>
             </div>
 
-            <template v-for="(effects, idx) in result.trace" :key="idx">
+            <template v-for="(effects, idx) in traceRecipe.trace" :key="idx">
               <!-- ARROW -->
               <div
                 class="step-arrow"
@@ -232,11 +287,11 @@
               >
                 <img
                   class="ing-icon"
-                  :src="getIconURL(result.ingredients[idx])"
+                  :src="getIconURL(traceRecipe.ingredients[idx])"
                   alt="icon"
                 />
                 <span class="arrow-symbol">→</span>
-                <span class="ing-label">{{ result.ingredients[idx] }}</span>
+                <span class="ing-label">{{ traceRecipe.ingredients[idx] }}</span>
               </div>
 
               <!-- NEXT CARD -->
@@ -248,7 +303,7 @@
                     v-for="e in effects"
                     :key="e"
                     :style="{ color: getColor(e) }"
-                    :class="{ 'new-eff': !previousEffects(idx).includes(e) }"
+                    :class="{ 'new-eff': !previousTraceEffects(idx).includes(e) }"
                   >
                     {{ e }}
                   </li>
@@ -257,18 +312,18 @@
                 <!-- profit badge (click toggles details) -->
                 <div
                   class="step-profit"
-                  :class="{ negative: stepCosts[idx+1].profit < 0, expanded: isExpanded(idx) }"
+                  :class="{ negative: traceRecipe.stepCosts[idx+1].profit < 0, expanded: isExpanded(idx) }"
                   @click="toggleStep(idx)"
                 >
-                  Profit: ${{ stepCosts[idx+1].profit }}
-                  ({{ stepCosts[idx+1].profitPct }}%)
+                  Profit: ${{ traceRecipe.stepCosts[idx+1].profit }}
+                  ({{ traceRecipe.stepCosts[idx+1].profitPct }}%)
                 </div>
 
                 <!-- expandable details -->
                 <transition name="expand">
                   <div v-if="isExpanded(idx)" class="step-details">
-                    <p>Running cost: ${{ stepCosts[idx+1].cost }}</p>
-                    <p>Fair price:   ${{ stepCosts[idx+1].sale }}</p>
+                    <p>Running cost: ${{ traceRecipe.stepCosts[idx+1].cost }}</p>
+                    <p>Fair price:   ${{ traceRecipe.stepCosts[idx+1].sale }}</p>
                   </div>
                 </transition>
 

@@ -4,14 +4,18 @@ const { createApp } = Vue;
 createApp({
   data() {
     return {
-      lists: { bases: [], ingredients: [], effects: [] },
+      lists: { bases: [], ingredients: [], effects: [], rules: [] },
       form: { base: null, include: [], exclude: [], maxIngredients: 20, },
       newInclude: "",
       newExclude: "",
       effectSort: "multiplier",
       showSettings: false,
+      showRecipesSidebar: false,
+      recipeTabPulse: false,
       result: null,
       showTrace: false,
+      traceRecipe: null,
+      favorites: [],
       loading: false,
       expandedSteps: [],
       aspect: { w: window.innerWidth, h: window.innerHeight },
@@ -131,12 +135,27 @@ createApp({
       const ing = this.lists.ingredients.find(x => x.name === name);
       return ing ? ing.icon_url : "/static/placeholder.png";
     },
+    getBase(name) {
+      return this.lists.bases.find(x => x.name === name);
+    },
+    getIngredient(name) {
+      return this.lists.ingredients.find(x => x.name === name);
+    },
+    getRule(currentEffect, ingredient) {
+      return this.lists.rules.find(rule => rule.current_effect === currentEffect.toLowerCase()
+        && rule.ingredient === ingredient.toLowerCase());
+    },
     previousEffects(idx) {
       if (idx === 0) {
         return this.lists.bases.find(b => b.name === this.form.base).effects;
       } else {
         return this.result.trace[idx - 1];
       }
+    },
+    previousTraceEffects(idx) {
+      if (!this.traceRecipe) return [];
+      if (idx === 0) return this.traceRecipe.baseEffects;
+      return this.traceRecipe.trace[idx - 1];
     },
     onWheel(evt) {
       const sc = this.$refs.scroller;
@@ -153,6 +172,130 @@ createApp({
       if (this.lists.bases.length) {
         this.form.base = this.lists.bases[0].name;
       }
+    },
+    loadFavorites() {
+      try {
+        const saved = JSON.parse(localStorage.getItem("schedule1Favorites") || "[]");
+        if (!Array.isArray(saved)) return;
+        this.favorites = saved
+          .filter(recipe => recipe && recipe.base && Array.isArray(recipe.ingredients))
+          .map((recipe, index) => ({
+            id: recipe.id || `${recipe.base}-${index}-${recipe.ingredients.join("-")}`,
+            name: recipe.name || `${recipe.base} Recipe`,
+            base: recipe.base,
+            ingredients: recipe.ingredients,
+          }));
+      } catch (_) { /* ignore parse errors */ }
+    },
+    saveFavorites() {
+      try {
+        localStorage.setItem("schedule1Favorites", JSON.stringify(this.favorites));
+      } catch (_) { /* ignore */ }
+    },
+    animateRecipeTab() {
+      this.recipeTabPulse = false;
+      requestAnimationFrame(() => {
+        this.recipeTabPulse = true;
+        window.setTimeout(() => {
+          this.recipeTabPulse = false;
+        }, 700);
+      });
+    },
+    removeFavorite(id) {
+      this.favorites = this.favorites.filter(recipe => recipe.id !== id);
+      this.saveFavorites();
+    },
+    mutateEffects(current, ingredientName) {
+      const ingredient = this.getIngredient(ingredientName);
+      if (!ingredient) return [...current];
+
+      const mutated = [];
+      current.forEach(effectName => {
+        const rule = this.getRule(effectName, ingredientName);
+        const newEffect = rule ? rule.effect : effectName;
+        if (!mutated.includes(newEffect)) {
+          mutated.push(newEffect);
+        }
+      });
+
+      if (current.length < 8 && !mutated.includes(ingredient.effect)) {
+        mutated.push(ingredient.effect);
+      }
+      return mutated;
+    },
+    buildRecipeDetails(baseName, ingredientNames, name) {
+      const base = this.getBase(baseName);
+      if (!base) return null;
+
+      let effects = [...base.effects];
+      const trace = [];
+      ingredientNames.forEach(ingredientName => {
+        effects = this.mutateEffects(effects, ingredientName);
+        trace.push([...effects]);
+      });
+
+      const stepCosts = this.buildStepCosts(base.value, base.effects, ingredientNames, trace);
+      return {
+        name: name || baseName,
+        base: baseName,
+        baseEffects: [...base.effects],
+        ingredients: [...ingredientNames],
+        finalEffects: [...effects],
+        trace,
+        stepCosts,
+      };
+    },
+    buildStepCosts(basePrice, baseEffects, ingredientNames, trace) {
+      const costs = [];
+      const innateSum = baseEffects.reduce((sum, effect) => sum + this.getMultiplier(effect), 0);
+      const baseSale = this.roundPrice(basePrice * (1 + innateSum));
+      costs.push({
+        cost: basePrice,
+        sale: baseSale,
+        profit: baseSale - basePrice,
+        profitPct: Math.round(((baseSale - basePrice) / basePrice) * 100),
+      });
+
+      let runningCost = basePrice;
+      ingredientNames.forEach((ingredientName, index) => {
+        const ingredient = this.getIngredient(ingredientName);
+        runningCost += ingredient ? ingredient.price : 0;
+        const multSum = trace[index].reduce((sum, effect) => sum + this.getMultiplier(effect), 0);
+        const sale = this.roundPrice(basePrice * (1 + multSum));
+        const profit = sale - runningCost;
+        const profitPct = runningCost > 0 ? Math.round((profit / runningCost) * 100) : 0;
+        costs.push({ cost: runningCost, sale, profit, profitPct });
+      });
+      return costs;
+    },
+    showCurrentTrace() {
+      if (!this.result?.success) return;
+      this.traceRecipe = this.buildRecipeDetails(this.form.base, this.result.ingredients, this.form.base);
+      this.expandedSteps = [];
+      this.showTrace = true;
+    },
+    showFavoriteTrace(recipe) {
+      const details = this.buildRecipeDetails(recipe.base, recipe.ingredients, recipe.name);
+      if (!details) return;
+      this.traceRecipe = details;
+      this.expandedSteps = [];
+      this.showTrace = true;
+    },
+    closeTrace() {
+      this.showTrace = false;
+      this.traceRecipe = null;
+    },
+    loadFavorite(recipe) {
+      const details = this.buildRecipeDetails(recipe.base, recipe.ingredients, recipe.name);
+      if (!details) return;
+      this.form.base = recipe.base;
+      this.result = {
+        success: true,
+        ingredients: [...recipe.ingredients],
+        final_effects: details.finalEffects,
+        trace: details.trace,
+      };
+      this.showRecipesSidebar = false;
     },
     getColor(name) {
       const e = this.lists.effects.find(x => x.name === name);
@@ -325,6 +468,7 @@ createApp({
   mounted() {
     // load last UI state (before lists so base may get overridden)
     this.loadState();
+    this.loadFavorites();
     // then get fresh data
     this.fetchLists();
     window.addEventListener("resize", this.onResize);
