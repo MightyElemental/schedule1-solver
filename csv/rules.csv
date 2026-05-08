@@ -1,115 +1,115 @@
-Effect,Ingredient,Replaces_Existing_Effect,If_Other_Present,If_Other_Missing
-Anti-Gravity,Banana,Smelly,,
-Anti-Gravity,Motor Oil,Paranoia,,
-Anti-Gravity,Mouth Wash,Calming,,
-Anti-Gravity,Paracetamol,Munchies,,
-Athletic,Cuke,Munchies,,
-Athletic,Paracetamol,Electrifying,,
-Balding,Energy Drink,Schizophrenic,,
-Balding,Iodine,Calming,,
-Balding,Paracetamol,Paranoia,,
-Bright-Eyed,Chili,Sneaky,,
-Bright-Eyed,Flu Medicine,Calming,,
-Bright-Eyed,Paracetamol,Spicy,,
-Bright-Eyed,Viagor,Euphoric,,
-Calming,Donut,Munchies,,
-Calming,Flu Medicine,Focused,,
-Calming,Gasoline,Paranoia,,
-Calming,Horse Semen,Anti-Gravity,,
-Calming,Mega Bean,Sneaky,,
-Calming,Paracetamol,Foggy,,
-Calming,Viagor,Laxative,,
-Calorie-Dense,Battery,Laxative,,
-Cyclopean,Cuke,Foggy,,
-Cyclopean,Mega Bean,Energizing,,
-Disorienting,Energy Drink,Glowing,,
-Disorienting,Gasoline,Electrifying,,
-Disorienting,Mega Bean,Focused,,
-Electrifying,Addy,Long Faced,,
-Electrifying,Energy Drink,Disorienting,,
-Electrifying,Horse Semen,Thought-Provoking,,
-Electrifying,Mega Bean,Shrinking,,
-Energizing,Addy,Foggy,,
-Energizing,Banana,Cyclopean,,
-Energizing,Donut,Shrinking,,
-Energizing,Energy Drink,Euphoric,,
-Energizing,Mega Bean,Thought-Provoking,,
-Energizing,Horse Semen,Seizure-Inducing,,
-Euphoric,Addy,Explosive,,
-Euphoric,Battery,Electrifying,,
-Euphoric,Chili,Athletic,,
-Euphoric,Cuke,Toxic,,
-Euphoric,Donut,Focused,,
-Euphoric,Energy Drink,Spicy,,
-Euphoric,Flu Medicine,Laxative,,
-Euphoric,Gasoline,Energizing,,
-Explosive,Donut,Calorie-Dense,,
-Focused,Banana,Disorienting,,
-Focused,Gasoline,Shrinking,,
-Focused,Mega Bean,Seizure-Inducing,,
-Foggy,Flu Medicine,Cyclopean,,
-Foggy,Gasoline,Laxative,,
-Gingeritis,Addy,Sedating,,
-Gingeritis,Donut,Jennerising,,
-Gingeritis,Flu Medicine,Thought-Provoking,,
-Gingeritis,Iodine,Calorie-Dense,,
-Gingeritis,Paracetamol,Focused,,
-Gingeritis,Viagor,Shrinking,,
-Glowing,Battery,Cyclopean,,
-Glowing,Gasoline,Disorienting,,
-Glowing,Mega Bean,Calming,,
-Jennerising,Banana,Paranoia,,
-Jennerising,Mouth Wash,Focused,,
-Laxative,Cuke,Euphoric,,
-Laxative,Energy Drink,Foggy,,
-Laxative,Mega Bean,Athletic,,
-Long Faced,Chili,Laxative,,
-Munchies,Battery,Shrinking,,
-Munchies,Cuke,Slippery,,
-Munchies,Energy Drink,Sedating,,
-Munchies,Flu Medicine,Athletic,,
-Munchies,Motor Oil,Energizing,,
-Paranoia,Cuke,Sneaky,,
-Paranoia,Flu Medicine,Shrinking,,
-Paranoia,Iodine,Foggy,,
-Paranoia,Mega Bean,Jennerising,,
-Paranoia,Paracetamol,Energizing,,
-Refreshing,Addy,Glowing,,
-Refreshing,Banana,Long Faced,,
-Refreshing,Chili,Shrinking,,
-Refreshing,Flu Medicine,Electrifying,,
-Refreshing,Horse Semen,Gingeritis,,
-Schizophrenic,Motor Oil,Munchies,,
-Sedating,Gasoline,Munchies,,
-Sedating,Motor Oil,Euphoric,,
-Sedating,Mouth Wash,Explosive,,
-Seizure-Inducing,Banana,Focused,,
-Seizure-Inducing,Iodine,Euphoric,,
-Shrinking,Energy Drink,Focused,,
-Slippery,Donut,Anti-Gravity,,
-Slippery,Flu Medicine,Munchies,,
-Slippery,Paracetamol,Calming,,
-Smelly,Banana,Toxic,,
-Smelly,Gasoline,Gingeritis,,
-Sneaky,Banana,Calming,,
-Sneaky,Donut,Balding,,
-Sneaky,Energy Drink,Tropic Thunder,,
-Sneaky,Gasoline,Jennerising,,
-Sneaky,Iodine,Toxic,,
-Sneaky,Mouth Wash,Calorie-Dense,,
-Sneaky,Viagor,Athletic,,
-Spicy,Gasoline,Euphoric,,
-Thought-Provoking,Banana,Energizing,,
-Thought-Provoking,Cuke,Gingeritis,,
-Thought-Provoking,Iodine,Refreshing,,
-Toxic,Chili,Munchies,,
-Toxic,Flu Medicine,Euphoric,,
-Toxic,Mega Bean,Slippery,,
-Toxic,Motor Oil,Foggy,,
-Toxic,Paracetamol,Glowing,,
-Toxic,Viagor,Disorienting,,
-Tropic Thunder,Battery,Munchies,,
-Tropic Thunder,Chili,Anti-Gravity,,
-Tropic Thunder,Gasoline,Sneaky,,
-Tropic Thunder,Paracetamol,Toxic,,
-Zombifying,Battery,Euphoric,,
+Effect,Ingredient,Replaces_Existing_Effect
+Anti-Gravity,Banana,Smelly
+Anti-Gravity,Motor Oil,Paranoia
+Anti-Gravity,Mouth Wash,Calming
+Anti-Gravity,Paracetamol,Munchies
+Athletic,Cuke,Munchies
+Athletic,Paracetamol,Electrifying
+Balding,Energy Drink,Schizophrenic
+Balding,Iodine,Calming
+Balding,Paracetamol,Paranoia
+Bright-Eyed,Chili,Sneaky
+Bright-Eyed,Flu Medicine,Calming
+Bright-Eyed,Paracetamol,Spicy
+Bright-Eyed,Viagor,Euphoric
+Calming,Donut,Munchies
+Calming,Flu Medicine,Focused
+Calming,Gasoline,Paranoia
+Calming,Horse Semen,Anti-Gravity
+Calming,Mega Bean,Sneaky
+Calming,Paracetamol,Foggy
+Calming,Viagor,Laxative
+Calorie-Dense,Battery,Laxative
+Cyclopean,Cuke,Foggy
+Cyclopean,Mega Bean,Energizing
+Disorienting,Energy Drink,Glowing
+Disorienting,Gasoline,Electrifying
+Disorienting,Mega Bean,Focused
+Electrifying,Addy,Long Faced
+Electrifying,Energy Drink,Disorienting
+Electrifying,Horse Semen,Thought-Provoking
+Electrifying,Mega Bean,Shrinking
+Energizing,Addy,Foggy
+Energizing,Banana,Cyclopean
+Energizing,Donut,Shrinking
+Energizing,Energy Drink,Euphoric
+Energizing,Mega Bean,Thought-Provoking
+Energizing,Horse Semen,Seizure-Inducing
+Euphoric,Addy,Explosive
+Euphoric,Battery,Electrifying
+Euphoric,Chili,Athletic
+Euphoric,Cuke,Toxic
+Euphoric,Donut,Focused
+Euphoric,Energy Drink,Spicy
+Euphoric,Flu Medicine,Laxative
+Euphoric,Gasoline,Energizing
+Explosive,Donut,Calorie-Dense
+Focused,Banana,Disorienting
+Focused,Gasoline,Shrinking
+Focused,Mega Bean,Seizure-Inducing
+Foggy,Flu Medicine,Cyclopean
+Foggy,Gasoline,Laxative
+Gingeritis,Addy,Sedating
+Gingeritis,Donut,Jennerising
+Gingeritis,Flu Medicine,Thought-Provoking
+Gingeritis,Iodine,Calorie-Dense
+Gingeritis,Paracetamol,Focused
+Gingeritis,Viagor,Shrinking
+Glowing,Battery,Cyclopean
+Glowing,Gasoline,Disorienting
+Glowing,Mega Bean,Calming
+Jennerising,Banana,Paranoia
+Jennerising,Mouth Wash,Focused
+Laxative,Cuke,Euphoric
+Laxative,Energy Drink,Foggy
+Laxative,Mega Bean,Athletic
+Long Faced,Chili,Laxative
+Munchies,Battery,Shrinking
+Munchies,Cuke,Slippery
+Munchies,Energy Drink,Sedating
+Munchies,Flu Medicine,Athletic
+Munchies,Motor Oil,Energizing
+Paranoia,Cuke,Sneaky
+Paranoia,Flu Medicine,Shrinking
+Paranoia,Iodine,Foggy
+Paranoia,Mega Bean,Jennerising
+Paranoia,Paracetamol,Energizing
+Refreshing,Addy,Glowing
+Refreshing,Banana,Long Faced
+Refreshing,Chili,Shrinking
+Refreshing,Flu Medicine,Electrifying
+Refreshing,Horse Semen,Gingeritis
+Schizophrenic,Motor Oil,Munchies
+Sedating,Gasoline,Munchies
+Sedating,Motor Oil,Euphoric
+Sedating,Mouth Wash,Explosive
+Seizure-Inducing,Banana,Focused
+Seizure-Inducing,Iodine,Euphoric
+Shrinking,Energy Drink,Focused
+Slippery,Donut,Anti-Gravity
+Slippery,Flu Medicine,Munchies
+Slippery,Paracetamol,Calming
+Smelly,Banana,Toxic
+Smelly,Gasoline,Gingeritis
+Sneaky,Banana,Calming
+Sneaky,Donut,Balding
+Sneaky,Energy Drink,Tropic Thunder
+Sneaky,Gasoline,Jennerising
+Sneaky,Iodine,Toxic
+Sneaky,Mouth Wash,Calorie-Dense
+Sneaky,Viagor,Athletic
+Spicy,Gasoline,Euphoric
+Thought-Provoking,Banana,Energizing
+Thought-Provoking,Cuke,Gingeritis
+Thought-Provoking,Iodine,Refreshing
+Toxic,Chili,Munchies
+Toxic,Flu Medicine,Euphoric
+Toxic,Mega Bean,Slippery
+Toxic,Motor Oil,Foggy
+Toxic,Paracetamol,Glowing
+Toxic,Viagor,Disorienting
+Tropic Thunder,Battery,Munchies
+Tropic Thunder,Chili,Anti-Gravity
+Tropic Thunder,Gasoline,Sneaky
+Tropic Thunder,Paracetamol,Toxic
+Zombifying,Battery,Euphoric

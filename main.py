@@ -20,8 +20,8 @@ from solver import SolveRequest, solve_recipe, SolveResponse
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup logic
+async def lifespan(_app: FastAPI):
+    """Load CSV-backed definitions during application startup."""
     rules.load_definitions()
     # Once this yields, FastAPI starts handling requests
     yield
@@ -67,9 +67,9 @@ def api_solve(req: SolveRequest):
     """Solve endpoint."""
     try:
         return solve_recipe(req)
-    except Exception as e:
-        print(e)
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as exc:
+        print(exc)
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.get("/")

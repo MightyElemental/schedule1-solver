@@ -65,7 +65,7 @@ createApp({
         return { name, multiplier: ef.multiplier, color: ef.color };
       });
       const multSum = finalEffects.reduce((s, e) => s + e.multiplier, 0);
-      const sellPrice = Math.round(basePrice * (1 + multSum));
+      const sellPrice = this.roundPrice(basePrice * (1 + multSum));
       return {
         basePrice, ingredients, ingredientsTotal,
         totalCost, finalEffects, sellPrice
@@ -79,7 +79,7 @@ createApp({
       // innate multipliers sum
       const innateSum = baseObj.effects
         .reduce((s,e) => s + this.getMultiplier(e), 0);
-      const baseSale = Math.round(basePrice * (1 + innateSum));
+      const baseSale = this.roundPrice(basePrice * (1 + innateSum));
       const baseProfit = baseSale - basePrice;
       const baseProfitPct = Math.round((baseProfit / basePrice)*100);
       costs.push({
@@ -97,7 +97,7 @@ createApp({
         const effects = this.result.trace[i];
         const multSum = effects
           .reduce((s,e) => s + this.getMultiplier(e), 0);
-        const sale = Math.round(basePrice * (1 + multSum));
+        const sale = this.roundPrice(basePrice * (1 + multSum));
         const profit = sale - runningCost;
         const profitPct = runningCost > 0
           ? Math.round((profit/runningCost)*100)
@@ -111,6 +111,14 @@ createApp({
     onResize() {
       this.aspect.w = window.innerWidth;
       this.aspect.h = window.innerHeight;
+    },
+    roundPrice(value) {
+      const floor = Math.floor(value);
+      const fraction = value - floor;
+      if (Math.abs(fraction - 0.5) < 1e-9) {
+        return floor % 2 === 0 ? floor : floor + 1;
+      }
+      return Math.round(value);
     },
     getIconURL(name) {
       const ing = this.lists.ingredients.find(x => x.name === name);

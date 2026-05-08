@@ -1,5 +1,6 @@
-# solver.py  (A* version)
-from heapq import heappush, heappop
+"""A* recipe solver for Schedule I effect combinations."""
+
+from heapq import heappop, heappush
 from typing import Dict, List, Optional, Set, Tuple
 
 from pydantic import BaseModel, Field
@@ -8,25 +9,37 @@ import rules
 
 StateKey = Tuple[str, ...]   # sorted tuple of effects
 
+
 class SolveRequest(BaseModel):
+    """Request body for finding a recipe that includes and excludes effects."""
+
     base: str
     include: List[str]
     exclude: List[str]
     max_expansions: Optional[int] = 1_000_000
-    max_ingredients: Optional[int] = Field(None, description="Maximum number of ingredients to use")
+    max_ingredients: Optional[int] = Field(
+        None,
+        description="Maximum number of ingredients to use",
+    )
+
 
 class SolveResponse(BaseModel):
+    """Response body containing the solver result and optional trace."""
+
     success: bool
     ingredients: Optional[List[str]] = None
     final_effects: Optional[List[str]] = None
     message: Optional[str] = None
     trace: Optional[List[List[str]]] = None
 
+
 def heuristic(current: Set[str], want_inc: Set[str]) -> int:
     """Admissible heuristic = number of desired effects still missing."""
     return len(want_inc - current)
 
+
 def solve_recipe(req: SolveRequest) -> SolveResponse:
+    """Find an ingredient sequence that satisfies the requested effect filters."""
     base = req.base
     want_inc = set(req.include)
     want_exc = set(req.exclude)
@@ -62,7 +75,7 @@ def solve_recipe(req: SolveRequest) -> SolveResponse:
     max_exp = req.max_expansions or 1_000_000
 
     while frontier:
-        f, g, cur_eff, path = heappop(frontier)
+        _f, g, cur_eff, path = heappop(frontier)
 
         # Simple cap on expansions
         expansions += 1

@@ -5,7 +5,7 @@ Defines the base products, ingredients, effects, and combination rules.
 Users should populate these lists/dicts with the full data set.
 """
 
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 import pandas as pd
 from numpy import nan
 
@@ -21,17 +21,21 @@ ingredients: Dict[str, Tuple[int, str, str]] = {}
 # effect -> (multiplier, hex_color)
 effects: Dict[str, Tuple[float, str]] = {}
 
-# Combination rules: (current_effect, ingredient) -> (new_effect, if_other_missing, if_other_present)
+# Combination rules: (current_effect, ingredient) -> new_effect
 # If no rule applies, the effect carries over unchanged.
-rules: Dict[Tuple[str, str], Tuple[str, Optional[str], Optional[str]]] = {}
+rules: Dict[Tuple[str, str], str] = {}
 
-def load_definitions():
+
+def load_definitions() -> None:
+    """Load product, rule, effect, and ingredient definitions from CSV files."""
     load_products()
     load_rules()
     load_effects()
     load_ingredients()
 
-def load_products():
+
+def load_products() -> None:
+    """Load base products and their innate effects from ``csv/products.csv``."""
     df = pd.read_csv("csv/products.csv", delimiter=",", header=0)
     df = df.replace({nan: None})
     for _, row in df.iterrows():
@@ -41,16 +45,20 @@ def load_products():
             innate_effects,
         )
 
-def load_rules():
+
+def load_rules() -> None:
+    """Load effect replacement rules from ``csv/rules.csv``."""
     df = pd.read_csv("csv/rules.csv", delimiter=",", header=0)
     df = df.replace({nan: None})
     for _, row in df.iterrows():
         rules[(
             str(row.Replaces_Existing_Effect).lower(),
             str(row.Ingredient).lower()
-        )] = (row.Effect, row.If_Other_Missing, row.If_Other_Present)
+        )] = str(row.Effect)
 
-def load_effects():
+
+def load_effects() -> None:
+    """Load effect multipliers and display colors from ``csv/effects.csv``."""
     df = pd.read_csv("csv/effects.csv", delimiter=",", header=0)
     for _, row in df.iterrows():
         effects[str(row.Name)] = (
@@ -58,7 +66,9 @@ def load_effects():
             str(row.Color),
         )
 
-def load_ingredients():
+
+def load_ingredients() -> None:
+    """Load ingredient costs, base effects, and icons from ``csv/ingredients.csv``."""
     df = pd.read_csv("csv/ingredients.csv", delimiter=",", header=0)
     for _, row in df.iterrows():
         ingredients[str(row.Name)] = (
@@ -89,14 +99,10 @@ def mutate(current: List[str], ingredient: str) -> List[str]:
         if curr_eff not in effects:
             raise ValueError(f"No such effect found: {curr_eff}")
 
-        key: Tuple = (curr_eff.lower(), ingredient.lower())
-        new_effect, if_other_missing, if_other_present = rules.get(key, (curr_eff, None, None))
+        key: Tuple[str, str] = (curr_eff.lower(), ingredient.lower())
+        new_effect = rules.get(key, curr_eff)
 
         if new_effect in mutated:
-            continue
-        if if_other_present and if_other_present not in current:
-            continue
-        if if_other_missing and if_other_missing in current:
             continue
 
         mutated.append(new_effect)
