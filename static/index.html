@@ -30,6 +30,51 @@
         <span class="side-tab-text">Batch</span>
         <span class="side-tab-count">{{ batchRows.length }}</span>
       </button>
+      <button
+        type="button"
+        class="side-tab"
+        aria-label="Settings"
+        :aria-expanded="showSettings.toString()"
+        @click="showSettings = !showSettings; showRecipesSidebar = false; showBatchSidebar = false"
+      >
+        <span class="side-tab-icon">⚙</span>
+        <span class="side-tab-text">Settings</span>
+      </button>
+      <div
+        v-if="showSettings"
+        class="settings-menu"
+        role="dialog"
+        aria-label="Settings"
+      >
+        <div class="settings-label">Effect Sort</div>
+        <div class="sort-controls" role="group" aria-label="Effect sort order">
+          <button
+            type="button"
+            :class="{ active: effectSort === 'multiplier' }"
+            @click="effectSort = 'multiplier'; showSettings = false"
+          >
+            Multiplier
+          </button>
+          <button
+            type="button"
+            :class="{ active: effectSort === 'alpha' }"
+            @click="effectSort = 'alpha'; showSettings = false"
+          >
+            A-Z
+          </button>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="side-tab"
+        @click="exportSavedData"
+      >
+        <span class="side-tab-icon">⇩</span>
+        <span class="side-tab-text">Export JSON</span>
+      </button>
+      <span v-if="dataExportMessage" class="side-panel-message">
+        {{ dataExportMessage }}
+      </span>
     </nav>
 
     <aside
@@ -63,13 +108,6 @@
           <span v-if="importMessage" class="share-message">{{ importMessage }}</span>
         </div>
       </form>
-
-      <div class="data-export">
-        <button type="button" @click="exportSavedData">
-          Export JSON
-        </button>
-        <span v-if="dataExportMessage" class="share-message">{{ dataExportMessage }}</span>
-      </div>
 
       <p v-if="favorites.length === 0" class="recipes-empty">
         Saved recipes will appear here.
@@ -329,41 +367,6 @@
 
     <header class="app-header">
       <h1>Schedule I Recipe Solver</h1>
-      <div class="settings">
-        <button
-          type="button"
-          class="settings-btn"
-          aria-label="Settings"
-          :aria-expanded="showSettings.toString()"
-          @click="showSettings = !showSettings"
-        >
-          ⚙
-        </button>
-        <div
-          v-if="showSettings"
-          class="settings-menu"
-          role="dialog"
-          aria-label="Settings"
-        >
-          <div class="settings-label">Effect Sort</div>
-          <div class="sort-controls" role="group" aria-label="Effect sort order">
-            <button
-              type="button"
-              :class="{ active: effectSort === 'multiplier' }"
-              @click="effectSort = 'multiplier'; showSettings = false"
-            >
-              Multiplier
-            </button>
-            <button
-              type="button"
-              :class="{ active: effectSort === 'alpha' }"
-              @click="effectSort = 'alpha'; showSettings = false"
-            >
-              A-Z
-            </button>
-          </div>
-        </div>
-      </div>
     </header>
 
     <!-- Base selector + innate effects -->
@@ -530,6 +533,8 @@
           </ul>
           <p><strong>Fair Sell Price:</strong>
              ${{ pricing.sellPrice }}</p>
+          <p><strong>Profit:</strong>
+             ${{ pricing.profit }} ({{ pricing.profitPct }}%)</p>
         </div>
       </div>
       <div v-else class="error">

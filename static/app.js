@@ -107,9 +107,11 @@ createApp({
       });
       const multSum = finalEffects.reduce((s, e) => s + e.multiplier, 0);
       const sellPrice = this.roundPrice(basePrice * (1 + multSum));
+      const profit = sellPrice - totalCost;
       return {
         basePrice, ingredients, ingredientsTotal,
-        totalCost, finalEffects, sellPrice
+        totalCost, finalEffects, sellPrice, profit,
+        profitPct: totalCost > 0 ? Math.round((profit / totalCost) * 100) : 0,
       };
     },
     stepCosts() {
@@ -550,10 +552,12 @@ createApp({
     },
     openRecipesSidebar() {
       this.showBatchSidebar = false;
+      this.showSettings = false;
       this.showRecipesSidebar = true;
     },
     openBatchSidebar() {
       this.showRecipesSidebar = false;
+      this.showSettings = false;
       this.showBatchSidebar = true;
     },
     closeBatchSidebar() {
