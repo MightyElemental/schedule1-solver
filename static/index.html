@@ -64,6 +64,13 @@
         </div>
       </form>
 
+      <div class="data-export">
+        <button type="button" @click="exportSavedData">
+          Export JSON
+        </button>
+        <span v-if="dataExportMessage" class="share-message">{{ dataExportMessage }}</span>
+      </div>
+
       <p v-if="favorites.length === 0" class="recipes-empty">
         Saved recipes will appear here.
       </p>

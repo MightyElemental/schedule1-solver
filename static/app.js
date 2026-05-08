@@ -27,6 +27,7 @@ createApp({
       shareMessage: "",
       importShareCode: "",
       importMessage: "",
+      dataExportMessage: "",
       selectedBatchRecipeId: "",
       batchQuantities: {},
       shoppingChecked: {},
@@ -545,6 +546,7 @@ createApp({
       this.showRecipesSidebar = false;
       this.importMessage = "";
       this.shareMessage = "";
+      this.dataExportMessage = "";
     },
     openRecipesSidebar() {
       this.showBatchSidebar = false;
@@ -574,6 +576,31 @@ createApp({
       } catch (err) {
         this.importMessage = err.message;
       }
+    },
+    exportSavedData() {
+      const data = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        favorites: this.favorites,
+        batch: {
+          quantities: this.batchQuantities,
+          shoppingChecked: this.shoppingChecked,
+          grow: this.batchGrow,
+        },
+        settings: {
+          effectSort: this.effectSort,
+        },
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `schedule1-solver-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      this.dataExportMessage = "Exported";
     },
     sameRecipe(recipe, base, ingredients) {
       if (recipe.base !== base || recipe.ingredients.length !== ingredients.length) {
