@@ -197,14 +197,48 @@
     <div v-if="result" class="result">
       <div class="result-header">
         <h2>Result</h2>
-        <button
-          v-if="result.success"
-          class="show-steps-btn"
-          @click="showCurrentTrace"
-        >
-          Show Steps
-        </button>
+        <div v-if="result.success" class="result-actions">
+          <button
+            class="save-recipe-btn"
+            type="button"
+            @click="openSaveRecipe"
+          >
+            Save Recipe
+          </button>
+          <button
+            class="show-steps-btn"
+            type="button"
+            @click="showCurrentTrace"
+          >
+            Show Steps
+          </button>
+        </div>
       </div>
+      <form
+        v-if="result.success && showSaveRecipe"
+        class="save-recipe-panel"
+        @submit.prevent="saveCurrentRecipe"
+      >
+        <label for="recipe-name">
+          Recipe Name
+          <input
+            id="recipe-name"
+            ref="saveRecipeNameInput"
+            v-model="saveRecipeName"
+            type="text"
+            maxlength="64"
+            @keyup.esc="closeSaveRecipe"
+          />
+        </label>
+        <div class="save-recipe-actions">
+          <button type="button" class="secondary-btn" @click="closeSaveRecipe">
+            Cancel
+          </button>
+          <button type="submit" class="save-recipe-btn">
+            Save
+          </button>
+        </div>
+      </form>
       <div v-if="result.success" class="cols">
         <!-- Left column: costs -->
         <div class="col">

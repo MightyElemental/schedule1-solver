@@ -12,6 +12,8 @@ createApp({
       showSettings: false,
       showRecipesSidebar: false,
       recipeTabPulse: false,
+      showSaveRecipe: false,
+      saveRecipeName: "",
       result: null,
       showTrace: false,
       traceRecipe: null,
@@ -27,6 +29,11 @@ createApp({
     },
     solveBtnText() {
       return this.loading ? "Solving…" : "Solve";
+    },
+    defaultRecipeName() {
+      if (!this.result?.success) return this.form.base || "Recipe";
+      const effects = this.result.final_effects.slice(0, 2).join(", ");
+      return effects ? `${this.form.base} - ${effects}` : `${this.form.base} Recipe`;
     },
     availableInclude() {
       const effects = this.lists.effects.filter(e => !this.form.include.includes(e.name)
@@ -192,6 +199,39 @@ createApp({
         localStorage.setItem("schedule1Favorites", JSON.stringify(this.favorites));
       } catch (_) { /* ignore */ }
     },
+    createFavoriteId() {
+      if (window.crypto?.randomUUID) {
+        return window.crypto.randomUUID();
+      }
+      return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    },
+    openSaveRecipe() {
+      if (!this.result?.success) return;
+      this.saveRecipeName = this.defaultRecipeName;
+      this.showSaveRecipe = true;
+      this.$nextTick(() => {
+        this.$refs.saveRecipeNameInput?.focus();
+        this.$refs.saveRecipeNameInput?.select();
+      });
+    },
+    closeSaveRecipe() {
+      this.showSaveRecipe = false;
+      this.saveRecipeName = "";
+    },
+    saveCurrentRecipe() {
+      if (!this.result?.success) return;
+
+      const name = this.saveRecipeName.trim() || this.defaultRecipeName;
+      this.favorites.push({
+        id: this.createFavoriteId(),
+        name,
+        base: this.form.base,
+        ingredients: [...this.result.ingredients],
+      });
+      this.saveFavorites();
+      this.closeSaveRecipe();
+      this.animateRecipeTab();
+    },
     animateRecipeTab() {
       this.recipeTabPulse = false;
       requestAnimationFrame(() => {
@@ -334,6 +374,7 @@ createApp({
     },
     async solve() {
       this.showTrace = false;
+      this.closeSaveRecipe();
       this.result = null;
       this.loading = true;
       try {

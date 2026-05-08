@@ -418,10 +418,17 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 .result-header h2 {
   margin: 0;
   color: #9f9;
+}
+.result-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .show-steps-btn {
   padding: 0.5em 1em;
@@ -433,6 +440,60 @@ body {
 }
 .show-steps-btn:hover {
   background: #3b7;
+}
+.save-recipe-btn {
+  padding: 0.5em 1em;
+  background: #486;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.save-recipe-btn:hover {
+  background: #597;
+}
+.save-recipe-panel {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #333;
+  border: 1px solid #444;
+  border-radius: 4px;
+}
+.save-recipe-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: #aff;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+.save-recipe-panel input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.55em;
+  background: #252525;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 3px;
+}
+.save-recipe-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.secondary-btn {
+  padding: 0.5em 1em;
+  background: #444;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.secondary-btn:hover {
+  background: #555;
 }
 .result .cols {
   display: flex;
