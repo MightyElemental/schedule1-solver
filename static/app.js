@@ -277,8 +277,11 @@ createApp({
       this.editingFavoriteId = recipe.id;
       this.editingFavoriteName = recipe.name;
       this.$nextTick(() => {
-        this.$refs.favoriteRenameInput?.focus();
-        this.$refs.favoriteRenameInput?.select();
+        const input = Array.isArray(this.$refs.favoriteRenameInput)
+          ? this.$refs.favoriteRenameInput[0]
+          : this.$refs.favoriteRenameInput;
+        input?.focus();
+        input?.select();
       });
     },
     cancelFavoriteRename() {
