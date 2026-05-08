@@ -134,13 +134,32 @@
             </ol>
           </div>
 
-          <div class="favorite-actions">
+          <div
+            class="favorite-actions"
+            :class="{ expanded: isFavoriteExpanded(recipe.id) }"
+          >
             <button type="button" @click.stop="loadFavorite(recipe)">Load</button>
             <button type="button" @click.stop="showFavoriteTrace(recipe)">Steps</button>
-            <button type="button" @click.stop="startFavoriteRename(recipe)">Rename</button>
             <button type="button" @click.stop="showShareCode(recipe)">Share</button>
-            <button type="button" class="danger delete-btn" @click.stop="removeFavorite(recipe.id)">
-              Delete
+            <button
+              v-if="isFavoriteExpanded(recipe.id)"
+              type="button"
+              class="icon-action"
+              aria-label="Rename recipe"
+              title="Rename"
+              @click.stop="startFavoriteRename(recipe)"
+            >
+              ✏️
+            </button>
+            <button
+              v-if="isFavoriteExpanded(recipe.id)"
+              type="button"
+              class="danger icon-action"
+              aria-label="Delete recipe"
+              title="Delete"
+              @click.stop="removeFavorite(recipe.id)"
+            >
+              🗑️
             </button>
           </div>
         </li>

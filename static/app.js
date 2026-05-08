@@ -40,8 +40,9 @@ createApp({
     },
     defaultRecipeName() {
       if (!this.result?.success) return this.form.base || "Recipe";
-      const effects = this.result.final_effects.slice(0, 2).join(", ");
-      return effects ? `${this.form.base} - ${effects}` : `${this.form.base} Recipe`;
+      return this.uniqueRecipeName(
+        this.recipeNameCandidates(this.form.base, this.result.final_effects, this.result.ingredients),
+      );
     },
     currentRecipeExists() {
       if (!this.result?.success) return false;
@@ -292,6 +293,41 @@ createApp({
       }
       this.cancelFavoriteRename();
     },
+    recipeNameCandidates(base, effects, ingredients, preferredName = "") {
+      const candidates = [];
+      if (preferredName.trim()) {
+        candidates.push(preferredName.trim());
+      }
+      if (effects.length === 0) {
+        candidates.push(`${base} Recipe`);
+      }
+      if (effects.length > 0) {
+        for (let count = Math.min(2, effects.length); count <= effects.length; count += 1) {
+          candidates.push(`${base} - ${effects.slice(0, count).join(", ")}`);
+        }
+      }
+      if (ingredients.length) {
+        candidates.push(`${base} - ${ingredients.join(", ")}`);
+      }
+      candidates.push(`${base} Recipe`);
+      return [...new Set(candidates)];
+    },
+    recipeNameExists(name) {
+      return this.favorites.some(recipe => recipe.name.toLowerCase() === name.toLowerCase());
+    },
+    uniqueRecipeName(candidates) {
+      const fallback = candidates[candidates.length - 1] || "Recipe";
+      const availableName = candidates.find(name => !this.recipeNameExists(name));
+      if (availableName) return availableName;
+
+      let suffix = 2;
+      let name = `${fallback} (${suffix})`;
+      while (this.recipeNameExists(name)) {
+        suffix += 1;
+        name = `${fallback} (${suffix})`;
+      }
+      return name;
+    },
     createBitWriter() {
       return {
         bytes: [],
@@ -393,9 +429,10 @@ createApp({
         nameBytes.push(reader.read(8));
       }
       const name = new TextDecoder().decode(new Uint8Array(nameBytes)).trim();
+      const effects = this.buildRecipeDetails(base.name, ingredients, name)?.finalEffects || [];
       return {
         id: this.createFavoriteId(),
-        name: name || `${base.name} Recipe`,
+        name: this.uniqueRecipeName(this.recipeNameCandidates(base.name, effects, ingredients, name)),
         base: base.name,
         ingredients,
         include: [],
@@ -447,10 +484,11 @@ createApp({
           this.importMessage = "Already exists";
           return;
         }
+        const importedName = recipe.name;
         this.favorites.push(recipe);
         this.saveFavorites();
         this.importShareCode = "";
-        this.importMessage = "Imported";
+        this.importMessage = `Imported as ${importedName}`;
         this.animateRecipeTab();
       } catch (err) {
         this.importMessage = err.message;
