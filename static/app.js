@@ -8,6 +8,8 @@ createApp({
       form: { base: null, include: [], exclude: [], maxIngredients: 20, },
       newInclude: "",
       newExclude: "",
+      effectSort: "multiplier",
+      showSettings: false,
       result: null,
       showTrace: false,
       loading: false,
@@ -22,18 +24,15 @@ createApp({
     solveBtnText() {
       return this.loading ? "Solving…" : "Solve";
     },
-    // sort dropdowns by descending multiplier
     availableInclude() {
-      return this.lists.effects
-        .filter(e => !this.form.include.includes(e.name)
-                  && !this.form.exclude.includes(e.name))
-        .sort((a, b) => b.multiplier - a.multiplier);
+      const effects = this.lists.effects.filter(e => !this.form.include.includes(e.name)
+        && !this.form.exclude.includes(e.name));
+      return this.sortEffects(effects);
     },
     availableExclude() {
-      return this.lists.effects
-        .filter(e => !this.form.exclude.includes(e.name)
-                  && !this.form.include.includes(e.name))
-        .sort((a, b) => b.multiplier - a.multiplier);
+      const effects = this.lists.effects.filter(e => !this.form.exclude.includes(e.name)
+        && !this.form.include.includes(e.name));
+      return this.sortEffects(effects);
     },
     includeDisabled() {
       return this.form.include.length >= 8
@@ -119,6 +118,14 @@ createApp({
         return floor % 2 === 0 ? floor : floor + 1;
       }
       return Math.round(value);
+    },
+    sortEffects(effects) {
+      const sorted = [...effects];
+      if (this.effectSort === "alpha") {
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      }
+      return sorted.sort((a, b) => b.multiplier - a.multiplier
+        || a.name.localeCompare(b.name));
     },
     getIconURL(name) {
       const ing = this.lists.ingredients.find(x => x.name === name);
@@ -263,6 +270,7 @@ createApp({
     saveState() {
       const state = {
         form: this.form,
+        effectSort: this.effectSort,
         expandedSteps: this.expandedSteps
       };
       try {
@@ -274,7 +282,7 @@ createApp({
       try {
         const saved = localStorage.getItem("schedule1State");
         if (!saved) return;
-        const { form, result, expandedSteps } = JSON.parse(saved);
+        const { form, effectSort, expandedSteps } = JSON.parse(saved);
         if (form) {
           // only overwrite keys we care about
           this.form.base           = form.base           ?? this.form.base;
@@ -284,6 +292,9 @@ createApp({
         }
         if (Array.isArray(expandedSteps)) {
           this.expandedSteps = expandedSteps;
+        }
+        if (["multiplier", "alpha"].includes(effectSort)) {
+          this.effectSort = effectSort;
         }
       } catch (_) { /* ignore parse errors */ }
     },
@@ -306,6 +317,9 @@ createApp({
       handler() {
         this.saveState();
       }
+    },
+    effectSort() {
+      this.saveState();
     }
   },  
   mounted() {

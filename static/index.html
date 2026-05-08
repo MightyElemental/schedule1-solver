@@ -8,7 +8,44 @@
 </head>  
 <body>
   <div id="app" class="dark-theme">
-    <h1>Schedule I Recipe Solver</h1>
+    <header class="app-header">
+      <h1>Schedule I Recipe Solver</h1>
+      <div class="settings">
+        <button
+          type="button"
+          class="settings-btn"
+          aria-label="Settings"
+          :aria-expanded="showSettings.toString()"
+          @click="showSettings = !showSettings"
+        >
+          ⚙
+        </button>
+        <div
+          v-if="showSettings"
+          class="settings-menu"
+          role="dialog"
+          aria-label="Settings"
+        >
+          <div class="settings-label">Effect Sort</div>
+          <div class="sort-controls" role="group" aria-label="Effect sort order">
+            <button
+              type="button"
+              :class="{ active: effectSort === 'multiplier' }"
+              @click="effectSort = 'multiplier'; showSettings = false"
+            >
+              Multiplier
+            </button>
+            <button
+              type="button"
+              :class="{ active: effectSort === 'alpha' }"
+              @click="effectSort = 'alpha'; showSettings = false"
+            >
+              A-Z
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
 
     <!-- Base selector + innate effects -->
     <div class="base-selector">
