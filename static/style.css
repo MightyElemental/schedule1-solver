@@ -190,18 +190,92 @@ body {
 }
 .favorite-recipe {
   margin-bottom: 0.75rem;
-  padding: 0.75rem;
   background: #2a2a2a;
   border: 1px solid #3a3a3a;
   border-radius: 4px;
+  overflow: hidden;
+}
+.favorite-summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.3rem 0.75rem;
+  width: 100%;
+  padding: 0.7rem;
+  background: transparent;
+  color: #ddd;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+.favorite-summary:hover {
+  background: #303030;
+}
+.favorite-rename {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.5rem;
+  padding: 0.7rem;
+  background: #303030;
+}
+.favorite-rename input {
+  min-width: 0;
+  padding: 0.5em;
+  background: #252525;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 3px;
+}
+.favorite-rename button {
+  padding: 0.45em 0.6em;
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.favorite-rename button:hover {
+  border-color: #9fc;
+}
+.favorite-title,
+.favorite-meta,
+.favorite-finance {
+  min-width: 0;
 }
 .favorite-title {
   color: #fff;
   font-weight: bold;
 }
 .favorite-meta {
-  margin-top: 0.25rem;
   color: #aaa;
+  font-size: 0.85em;
+}
+.favorite-finance {
+  grid-column: 1 / -1;
+  color: #cfc;
+  font-size: 0.85em;
+}
+.favorite-effect-dots {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  grid-row: 1 / 3;
+  grid-column: 2;
+}
+.favorite-effect-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.12);
+}
+.favorite-details {
+  padding: 0 0.7rem 0.7rem;
+}
+.favorite-filters {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+  color: #bbb;
   font-size: 0.85em;
 }
 .favorite-ingredients {
@@ -213,6 +287,7 @@ body {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  padding: 0 0.7rem 0.7rem;
 }
 .favorite-actions button {
   flex: 1;
@@ -451,6 +526,11 @@ body {
 }
 .save-recipe-btn:hover {
   background: #597;
+}
+.save-recipe-btn:disabled {
+  background: #444;
+  color: #aaa;
+  cursor: default;
 }
 .save-recipe-panel {
   display: grid;

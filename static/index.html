@@ -42,20 +42,76 @@
       </p>
 
       <ul v-else class="favorite-recipes">
-        <li v-for="recipe in favorites" :key="recipe.id" class="favorite-recipe">
-          <div class="favorite-title">{{ recipe.name }}</div>
-          <div class="favorite-meta">
-            {{ recipe.base }} · {{ recipe.ingredients.length }} ingredients
+        <li
+          v-for="recipe in favorites"
+          :key="recipe.id"
+          class="favorite-recipe"
+          :class="{ expanded: isFavoriteExpanded(recipe.id) }"
+        >
+          <form
+            v-if="editingFavoriteId === recipe.id"
+            class="favorite-rename"
+            @submit.prevent="saveFavoriteRename(recipe)"
+          >
+            <input
+              ref="favoriteRenameInput"
+              v-model="editingFavoriteName"
+              type="text"
+              maxlength="64"
+              @keyup.esc="cancelFavoriteRename"
+            />
+            <button type="submit">Save</button>
+            <button type="button" @click="cancelFavoriteRename">Cancel</button>
+          </form>
+
+          <button
+            v-else
+            type="button"
+            class="favorite-summary"
+            @click="toggleFavoriteDetails(recipe.id)"
+          >
+            <span class="favorite-title">{{ recipe.name }}</span>
+            <span class="favorite-meta">
+              {{ recipe.base }} · {{ recipe.ingredients.length }} ingredients
+            </span>
+            <span class="favorite-finance">
+              Cost ${{ recipeFinancials(recipe).totalCost }}
+              · Sell ${{ recipeFinancials(recipe).sellPrice }}
+              · Profit ${{ recipeFinancials(recipe).profit }}
+              ({{ recipeFinancials(recipe).profitPct }}%)
+            </span>
+            <span class="favorite-effect-dots" aria-label="Final effects">
+              <span
+                v-for="effect in favoriteEffects(recipe)"
+                :key="effect"
+                class="favorite-effect-dot"
+                :title="effect"
+                :style="{ backgroundColor: getColor(effect) }"
+              ></span>
+            </span>
+          </button>
+
+          <div v-if="isFavoriteExpanded(recipe.id)" class="favorite-details">
+            <div v-if="recipe.include.length || recipe.exclude.length" class="favorite-filters">
+              <div v-if="recipe.include.length">
+                <strong>Include:</strong> {{ recipe.include.join(", ") }}
+              </div>
+              <div v-if="recipe.exclude.length">
+                <strong>Exclude:</strong> {{ recipe.exclude.join(", ") }}
+              </div>
+            </div>
+            <ol class="favorite-ingredients">
+              <li v-for="ingredient in recipe.ingredients" :key="ingredient">
+                {{ ingredient }}
+              </li>
+            </ol>
           </div>
-          <ol class="favorite-ingredients">
-            <li v-for="ingredient in recipe.ingredients" :key="ingredient">
-              {{ ingredient }}
-            </li>
-          </ol>
+
           <div class="favorite-actions">
-            <button type="button" @click="loadFavorite(recipe)">Load</button>
-            <button type="button" @click="showFavoriteTrace(recipe)">Steps</button>
-            <button type="button" class="danger" @click="removeFavorite(recipe.id)">
+            <button type="button" @click.stop="loadFavorite(recipe)">Load</button>
+            <button type="button" @click.stop="showFavoriteTrace(recipe)">Steps</button>
+            <button type="button" @click.stop="startFavoriteRename(recipe)">Rename</button>
+            <button type="button" class="danger" @click.stop="removeFavorite(recipe.id)">
               Delete
             </button>
           </div>
@@ -201,9 +257,10 @@
           <button
             class="save-recipe-btn"
             type="button"
+            :disabled="currentRecipeExists"
             @click="openSaveRecipe"
           >
-            Save Recipe
+            {{ saveRecipeButtonText }}
           </button>
           <button
             class="show-steps-btn"

@@ -18,6 +18,9 @@ createApp({
       showTrace: false,
       traceRecipe: null,
       favorites: [],
+      expandedFavoriteIds: [],
+      editingFavoriteId: null,
+      editingFavoriteName: "",
       loading: false,
       expandedSteps: [],
       aspect: { w: window.innerWidth, h: window.innerHeight },
@@ -34,6 +37,17 @@ createApp({
       if (!this.result?.success) return this.form.base || "Recipe";
       const effects = this.result.final_effects.slice(0, 2).join(", ");
       return effects ? `${this.form.base} - ${effects}` : `${this.form.base} Recipe`;
+    },
+    currentRecipeExists() {
+      if (!this.result?.success) return false;
+      return this.favorites.some(recipe => this.sameRecipe(
+        recipe,
+        this.form.base,
+        this.result.ingredients,
+      ));
+    },
+    saveRecipeButtonText() {
+      return this.currentRecipeExists ? "Already Exists" : "Save Recipe";
     },
     availableInclude() {
       const effects = this.lists.effects.filter(e => !this.form.include.includes(e.name)
@@ -191,6 +205,8 @@ createApp({
             name: recipe.name || `${recipe.base} Recipe`,
             base: recipe.base,
             ingredients: recipe.ingredients,
+            include: Array.isArray(recipe.include) ? recipe.include : [],
+            exclude: Array.isArray(recipe.exclude) ? recipe.exclude : [],
           }));
       } catch (_) { /* ignore parse errors */ }
     },
@@ -206,7 +222,7 @@ createApp({
       return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     },
     openSaveRecipe() {
-      if (!this.result?.success) return;
+      if (!this.result?.success || this.currentRecipeExists) return;
       this.saveRecipeName = this.defaultRecipeName;
       this.showSaveRecipe = true;
       this.$nextTick(() => {
@@ -219,7 +235,7 @@ createApp({
       this.saveRecipeName = "";
     },
     saveCurrentRecipe() {
-      if (!this.result?.success) return;
+      if (!this.result?.success || this.currentRecipeExists) return;
 
       const name = this.saveRecipeName.trim() || this.defaultRecipeName;
       this.favorites.push({
@@ -227,6 +243,8 @@ createApp({
         name,
         base: this.form.base,
         ingredients: [...this.result.ingredients],
+        include: [...this.form.include],
+        exclude: [...this.form.exclude],
       });
       this.saveFavorites();
       this.closeSaveRecipe();
@@ -243,7 +261,47 @@ createApp({
     },
     removeFavorite(id) {
       this.favorites = this.favorites.filter(recipe => recipe.id !== id);
+      this.expandedFavoriteIds = this.expandedFavoriteIds.filter(recipeId => recipeId !== id);
+      if (this.editingFavoriteId === id) {
+        this.cancelFavoriteRename();
+      }
       this.saveFavorites();
+    },
+    startFavoriteRename(recipe) {
+      this.editingFavoriteId = recipe.id;
+      this.editingFavoriteName = recipe.name;
+      this.$nextTick(() => {
+        this.$refs.favoriteRenameInput?.focus();
+        this.$refs.favoriteRenameInput?.select();
+      });
+    },
+    cancelFavoriteRename() {
+      this.editingFavoriteId = null;
+      this.editingFavoriteName = "";
+    },
+    saveFavoriteRename(recipe) {
+      const name = this.editingFavoriteName.trim();
+      if (name) {
+        recipe.name = name;
+        this.saveFavorites();
+      }
+      this.cancelFavoriteRename();
+    },
+    sameRecipe(recipe, base, ingredients) {
+      if (recipe.base !== base || recipe.ingredients.length !== ingredients.length) {
+        return false;
+      }
+      return recipe.ingredients.every((ingredient, index) => ingredient === ingredients[index]);
+    },
+    toggleFavoriteDetails(id) {
+      if (this.expandedFavoriteIds.includes(id)) {
+        this.expandedFavoriteIds = this.expandedFavoriteIds.filter(recipeId => recipeId !== id);
+      } else {
+        this.expandedFavoriteIds.push(id);
+      }
+    },
+    isFavoriteExpanded(id) {
+      return this.expandedFavoriteIds.includes(id);
     },
     mutateEffects(current, ingredientName) {
       const ingredient = this.getIngredient(ingredientName);
@@ -284,6 +342,23 @@ createApp({
         trace,
         stepCosts,
       };
+    },
+    recipeFinancials(recipe) {
+      const details = this.buildRecipeDetails(recipe.base, recipe.ingredients, recipe.name);
+      if (!details) {
+        return { totalCost: 0, sellPrice: 0, profit: 0, profitPct: 0 };
+      }
+      const finalStep = details.stepCosts[details.stepCosts.length - 1];
+      return {
+        totalCost: finalStep.cost,
+        sellPrice: finalStep.sale,
+        profit: finalStep.profit,
+        profitPct: finalStep.profitPct,
+      };
+    },
+    favoriteEffects(recipe) {
+      const details = this.buildRecipeDetails(recipe.base, recipe.ingredients, recipe.name);
+      return details ? details.finalEffects : [];
     },
     buildStepCosts(basePrice, baseEffects, ingredientNames, trace) {
       const costs = [];
@@ -329,6 +404,10 @@ createApp({
       const details = this.buildRecipeDetails(recipe.base, recipe.ingredients, recipe.name);
       if (!details) return;
       this.form.base = recipe.base;
+      this.form.include = Array.isArray(recipe.include) ? [...recipe.include] : [];
+      this.form.exclude = Array.isArray(recipe.exclude) ? [...recipe.exclude] : [];
+      this.newInclude = "";
+      this.newExclude = "";
       this.result = {
         success: true,
         ingredients: [...recipe.ingredients],
