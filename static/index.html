@@ -8,17 +8,29 @@
 </head>  
 <body>
   <div id="app" class="dark-theme">
-    <button
-      type="button"
-      class="recipes-tab"
-      :class="{ pulse: recipeTabPulse }"
-      :aria-expanded="showRecipesSidebar.toString()"
-      @click="showRecipesSidebar = true"
-    >
-      <span class="recipes-tab-icon">★</span>
-      <span class="recipes-tab-text">Recipes</span>
-      <span class="recipes-tab-count">{{ favorites.length }}</span>
-    </button>
+    <nav class="side-tabs" aria-label="Side panels">
+      <button
+        type="button"
+        class="side-tab"
+        :class="{ pulse: recipeTabPulse }"
+        :aria-expanded="showRecipesSidebar.toString()"
+        @click="openRecipesSidebar"
+      >
+        <span class="side-tab-icon">★</span>
+        <span class="side-tab-text">Recipes</span>
+        <span class="side-tab-count">{{ favorites.length }}</span>
+      </button>
+      <button
+        type="button"
+        class="side-tab"
+        :aria-expanded="showBatchSidebar.toString()"
+        @click="openBatchSidebar"
+      >
+        <span class="side-tab-icon">☷</span>
+        <span class="side-tab-text">Batch</span>
+        <span class="side-tab-count">{{ batchRows.length }}</span>
+      </button>
+    </nav>
 
     <aside
       class="recipes-sidebar"
@@ -164,6 +176,148 @@
           </div>
         </li>
       </ul>
+
+    </aside>
+
+    <aside
+      class="recipes-sidebar batch-sidebar"
+      :class="{ open: showBatchSidebar }"
+      aria-label="Batch calculator"
+    >
+      <div class="recipes-header">
+        <h3>Batch Calculator</h3>
+        <button
+          type="button"
+          class="sidebar-close-btn"
+          aria-label="Close batch calculator"
+          @click="closeBatchSidebar"
+        >
+          ×
+        </button>
+      </div>
+
+      <section class="batch-calculator">
+        <div class="grow-options">
+          <label>
+            Grow Setup
+            <select v-model="batchGrow.container">
+              <option value="tent">Grow Tent ({{ batchGrow.pgr ? 12 : 8 }})</option>
+              <option value="pot">Pot ({{ batchGrow.pgr ? 16 : 12 }})</option>
+            </select>
+          </label>
+          <label class="check-row">
+            <input type="checkbox" v-model="batchGrow.pgr" />
+            PGR (+4 yield)
+          </label>
+          <label class="check-row">
+            <input type="checkbox" v-model="batchGrow.speedGrow" />
+            Speed Grow ($30)
+          </label>
+          <label class="check-row">
+            <input type="checkbox" v-model="batchGrow.fertilizer" />
+            Fertilizer ($30)
+          </label>
+        </div>
+
+        <form class="batch-add" @submit.prevent="addBatchRecipe">
+          <label>
+            Saved Recipe
+            <select v-model="selectedBatchRecipeId">
+              <option value="">-- select recipe --</option>
+              <option
+                v-for="recipe in availableBatchRecipes"
+                :key="recipe.id"
+                :value="recipe.id"
+              >
+                {{ recipe.name }}
+              </option>
+            </select>
+          </label>
+          <button type="submit" :disabled="!selectedBatchRecipeId">Add</button>
+        </form>
+
+        <div class="batch-recipes">
+          <p v-if="favorites.length === 0" class="recipes-empty">
+            Save recipes before building a batch.
+          </p>
+          <p v-else-if="batchRows.length === 0" class="recipes-empty">
+            Add recipes to build a batch.
+          </p>
+
+          <article
+            v-for="row in batchRows"
+            :key="row.recipe.id"
+            class="batch-recipe"
+          >
+            <div class="batch-recipe-summary">
+              <strong :title="row.recipe.name">{{ row.recipe.name }}</strong>
+              <span>
+                {{ row.recipe.base }} · Cost ${{ row.finances.totalCost }}
+                · Sell ${{ row.finances.sellPrice }}
+                · Profit ${{ row.finances.profit }} ({{ row.finances.profitPct }}%)
+              </span>
+            </div>
+            <div class="batch-stepper" :aria-label="`Quantity for ${row.recipe.name}`">
+              <button
+                type="button"
+                :disabled="row.quantity <= 0"
+                @click="adjustBatchQuantity(row.recipe, -batchSizeForRecipe(row.recipe))"
+              >
+                -{{ batchSizeForRecipe(row.recipe) }}
+              </button>
+              <button type="button" @click="adjustBatchQuantity(row.recipe, -1)">−</button>
+              <input
+                type="text"
+                inputmode="numeric"
+                :value="row.quantity"
+                @input="setBatchQuantity(row.recipe.id, $event.target.value)"
+              />
+              <button type="button" @click="adjustBatchQuantity(row.recipe, 1)">+</button>
+              <button
+                type="button"
+                @click="adjustBatchQuantity(row.recipe, batchSizeForRecipe(row.recipe))"
+              >
+                +{{ batchSizeForRecipe(row.recipe) }}
+              </button>
+              <button
+                type="button"
+                class="danger"
+                aria-label="Remove recipe from batch"
+                title="Remove"
+                @click="removeBatchRecipe(row.recipe.id)"
+              >
+                ×
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <div class="batch-totals">
+          <div>Cost <strong>${{ batchTotals.cost }}</strong></div>
+          <div>Sell <strong>${{ batchTotals.sell }}</strong></div>
+          <div>
+            Profit
+            <strong>${{ batchTotals.profit }} ({{ batchTotals.profitPct }}%)</strong>
+          </div>
+        </div>
+
+        <div class="shopping-list">
+          <h4>Shopping List</h4>
+          <p v-if="shoppingList.length === 0" class="recipes-empty">
+            Set recipe quantities to build a list.
+          </p>
+          <label
+            v-for="item in shoppingList"
+            :key="item.key"
+            class="shopping-item"
+            :class="{ checked: shoppingChecked[item.key] }"
+          >
+            <input type="checkbox" v-model="shoppingChecked[item.key]" />
+            <span>{{ item.name }} ×{{ item.quantity }}</span>
+            <span>${{ item.totalCost }}</span>
+          </label>
+        </div>
+      </section>
     </aside>
 
     <header class="app-header">

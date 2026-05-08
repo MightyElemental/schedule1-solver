@@ -11,6 +11,7 @@ createApp({
       effectSort: "multiplier",
       showSettings: false,
       showRecipesSidebar: false,
+      showBatchSidebar: false,
       recipeTabPulse: false,
       showSaveRecipe: false,
       saveRecipeName: "",
@@ -26,6 +27,15 @@ createApp({
       shareMessage: "",
       importShareCode: "",
       importMessage: "",
+      selectedBatchRecipeId: "",
+      batchQuantities: {},
+      shoppingChecked: {},
+      batchGrow: {
+        container: "tent",
+        pgr: false,
+        speedGrow: false,
+        fertilizer: false,
+      },
       loading: false,
       expandedSteps: [],
       aspect: { w: window.innerWidth, h: window.innerHeight },
@@ -135,6 +145,63 @@ createApp({
         costs.push({ cost: runningCost, sale, profit, profitPct });
       });
       return costs;
+    },
+    batchRows() {
+      return this.favorites
+        .map(recipe => ({
+          recipe,
+          quantity: Math.floor(Math.max(0, Number(this.batchQuantities[recipe.id]) || 0)),
+        }))
+        .filter(row => row.quantity > 0)
+        .map(row => ({
+          ...row,
+          finances: this.recipeBatchFinancials(row.recipe, row.quantity),
+        }));
+    },
+    batchTotals() {
+      const totals = this.batchRows.reduce((sum, row) => ({
+        cost: sum.cost + row.finances.totalCost,
+        sell: sum.sell + row.finances.sellPrice,
+        profit: sum.profit + row.finances.profit,
+      }), { cost: 0, sell: 0, profit: 0 });
+      return {
+        ...totals,
+        profitPct: totals.cost > 0 ? Math.round((totals.profit / totals.cost) * 100) : 0,
+      };
+    },
+    shoppingList() {
+      const items = new Map();
+      const addItem = (name, quantity, unitCost) => {
+        if (quantity <= 0) return;
+        const key = name.toLowerCase();
+        const current = items.get(key) || { key, name, quantity: 0, unitCost, totalCost: 0 };
+        current.quantity += quantity;
+        current.totalCost += quantity * unitCost;
+        items.set(key, current);
+      };
+
+      this.batchRows.forEach(({ recipe, quantity }) => {
+        if (this.isWeedBase(recipe.base)) {
+          const plants = this.plantsNeeded(quantity);
+          addItem(`${recipe.base} Seed`, plants, this.seedPrice(recipe.base));
+          addItem("Soil", plants, 10);
+          if (this.batchGrow.pgr) addItem("PGR", plants, 30);
+          if (this.batchGrow.speedGrow) addItem("Speed Grow", plants, 30);
+          if (this.batchGrow.fertilizer) addItem("Fertilizer", plants, 30);
+        } else {
+          const base = this.getBase(recipe.base);
+          addItem(recipe.base, quantity, base ? base.value : 0);
+        }
+        recipe.ingredients.forEach(ingredientName => {
+          const ingredient = this.getIngredient(ingredientName);
+          addItem(ingredientName, quantity, ingredient ? ingredient.price : 0);
+        });
+      });
+
+      return [...items.values()].sort((a, b) => a.name.localeCompare(b.name));
+    },
+    availableBatchRecipes() {
+      return this.favorites.filter(recipe => !this.batchQuantity(recipe.id));
     }
   },
   methods: {
@@ -479,6 +546,17 @@ createApp({
       this.importMessage = "";
       this.shareMessage = "";
     },
+    openRecipesSidebar() {
+      this.showBatchSidebar = false;
+      this.showRecipesSidebar = true;
+    },
+    openBatchSidebar() {
+      this.showRecipesSidebar = false;
+      this.showBatchSidebar = true;
+    },
+    closeBatchSidebar() {
+      this.showBatchSidebar = false;
+    },
     importSharedRecipe() {
       this.importMessage = "";
       try {
@@ -512,6 +590,33 @@ createApp({
     },
     isFavoriteExpanded(id) {
       return this.expandedFavoriteIds.includes(id);
+    },
+    batchQuantity(id) {
+      return Math.floor(Math.max(0, Number(this.batchQuantities[id]) || 0));
+    },
+    setBatchQuantity(id, value) {
+      const quantity = Math.floor(Math.max(0, Number.parseInt(value, 10) || 0));
+      if (quantity > 0) {
+        this.batchQuantities[id] = quantity;
+      } else {
+        delete this.batchQuantities[id];
+      }
+    },
+    addBatchRecipe() {
+      if (!this.selectedBatchRecipeId) return;
+      const recipe = this.favorites.find(item => item.id === this.selectedBatchRecipeId);
+      if (!recipe) return;
+      this.setBatchQuantity(recipe.id, this.batchSizeForRecipe(recipe));
+      this.selectedBatchRecipeId = "";
+    },
+    removeBatchRecipe(id) {
+      delete this.batchQuantities[id];
+    },
+    adjustBatchQuantity(recipe, amount) {
+      this.setBatchQuantity(recipe.id, this.batchQuantity(recipe.id) + amount);
+    },
+    batchSizeForRecipe(recipe) {
+      return this.isWeedBase(recipe.base) ? this.plantYield() : 1;
     },
     mutateEffects(current, ingredientName) {
       const ingredient = this.getIngredient(ingredientName);
@@ -569,6 +674,55 @@ createApp({
     favoriteEffects(recipe) {
       const details = this.buildRecipeDetails(recipe.base, recipe.ingredients, recipe.name);
       return details ? details.finalEffects : [];
+    },
+    isWeedBase(baseName) {
+      return ["OG Kush", "Sour Diesel", "Green Crack", "Granddaddy Purple"].includes(baseName);
+    },
+    seedPrice(baseName) {
+      return {
+        "OG Kush": 30,
+        "Sour Diesel": 35,
+        "Green Crack": 40,
+        "Granddaddy Purple": 45,
+      }[baseName] || 0;
+    },
+    plantYield() {
+      const baseYield = this.batchGrow.container === "pot" ? 12 : 8;
+      return baseYield + (this.batchGrow.pgr ? 4 : 0);
+    },
+    plantsNeeded(quantity) {
+      return Math.ceil(quantity / this.plantYield());
+    },
+    growBaseCost(baseName, quantity) {
+      const plants = this.plantsNeeded(quantity);
+      const supplementCost = [
+        this.batchGrow.pgr,
+        this.batchGrow.speedGrow,
+        this.batchGrow.fertilizer,
+      ].filter(Boolean).length * 30;
+      return plants * (this.seedPrice(baseName) + 10 + supplementCost);
+    },
+    recipeBatchFinancials(recipe, quantity) {
+      const unitFinancials = this.recipeFinancials(recipe);
+      const ingredientCost = recipe.ingredients.reduce((sum, ingredientName) => {
+        const ingredient = this.getIngredient(ingredientName);
+        return sum + (ingredient ? ingredient.price : 0);
+      }, 0) * quantity;
+      const base = this.getBase(recipe.base);
+      const baseCost = this.isWeedBase(recipe.base)
+        ? this.growBaseCost(recipe.base, quantity)
+        : (base ? base.value * quantity : 0);
+      const totalCost = baseCost + ingredientCost;
+      const sellPrice = unitFinancials.sellPrice * quantity;
+      const profit = sellPrice - totalCost;
+      return {
+        baseCost,
+        ingredientCost,
+        totalCost,
+        sellPrice,
+        profit,
+        profitPct: totalCost > 0 ? Math.round((profit / totalCost) * 100) : 0,
+      };
     },
     buildStepCosts(basePrice, baseEffects, ingredientNames, trace) {
       const costs = [];
@@ -750,6 +904,16 @@ createApp({
         localStorage.setItem("schedule1State", JSON.stringify(state));
       } catch (_) { /* ignore */ }
     },
+    saveBatchState() {
+      const state = {
+        batchQuantities: this.batchQuantities,
+        shoppingChecked: this.shoppingChecked,
+        batchGrow: this.batchGrow,
+      };
+      try {
+        localStorage.setItem("schedule1BatchState", JSON.stringify(state));
+      } catch (_) { /* ignore */ }
+    },
   
     loadState() {
       try {
@@ -768,6 +932,27 @@ createApp({
         }
         if (["multiplier", "alpha"].includes(effectSort)) {
           this.effectSort = effectSort;
+        }
+      } catch (_) { /* ignore parse errors */ }
+    },
+    loadBatchState() {
+      try {
+        const saved = localStorage.getItem("schedule1BatchState");
+        if (!saved) return;
+        const { batchQuantities, shoppingChecked, batchGrow } = JSON.parse(saved);
+        if (batchQuantities && typeof batchQuantities === "object") {
+          this.batchQuantities = batchQuantities;
+        }
+        if (shoppingChecked && typeof shoppingChecked === "object") {
+          this.shoppingChecked = shoppingChecked;
+        }
+        if (batchGrow && typeof batchGrow === "object") {
+          this.batchGrow.container = ["tent", "pot"].includes(batchGrow.container)
+            ? batchGrow.container
+            : this.batchGrow.container;
+          this.batchGrow.pgr = Boolean(batchGrow.pgr);
+          this.batchGrow.speedGrow = Boolean(batchGrow.speedGrow);
+          this.batchGrow.fertilizer = Boolean(batchGrow.fertilizer);
         }
       } catch (_) { /* ignore parse errors */ }
     },
@@ -793,11 +978,30 @@ createApp({
     },
     effectSort() {
       this.saveState();
+    },
+    batchQuantities: {
+      deep: true,
+      handler() {
+        this.saveBatchState();
+      }
+    },
+    shoppingChecked: {
+      deep: true,
+      handler() {
+        this.saveBatchState();
+      }
+    },
+    batchGrow: {
+      deep: true,
+      handler() {
+        this.saveBatchState();
+      }
     }
   },  
   mounted() {
     // load last UI state (before lists so base may get overridden)
     this.loadState();
+    this.loadBatchState();
     this.loadFavorites();
     // then get fresh data
     this.fetchLists();
