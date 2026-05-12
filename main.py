@@ -1,26 +1,21 @@
 #!/usr/bin/python
 
-"""
-main.py
+"""FastAPI application exposing solver and CSV-backed metadata endpoints."""
 
-FastAPI application exposing:
- - GET /lists       -> available bases, ingredients, effects, rules
- - POST /solve      -> solve for a recipe
- - GET /            -> serve the SPA
-"""
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from contextlib import asynccontextmanager
 
 import rules
-from solver import SolveRequest, solve_recipe, SolveResponse
+from solver import SolveRequest, SolveResponse, solve_recipe
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Load CSV-backed definitions during application startup."""
     rules.load_definitions()
     # Once this yields, FastAPI starts handling requests
@@ -32,19 +27,24 @@ app = FastAPI(title="Alchemy Recipe Solver", lifespan=lifespan)
 # Serve static files from ./static
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 @app.get("/lists")
-def get_lists():
+def get_lists() -> JSONResponse:
     """
     Return full metadata for:
-      - bases: {name, value, effects: [string,…]}
+      - bases: {name, base_value, effects: [string,...]}
       - ingredients: {name, price, effect}
       - effects: {name, multiplier, color}
       - rules: {current_effect, ingredient, effect}
     """
     # bases
     bases = [
-        {"name": name, "value": val, "effects": effs}
-        for name, (val, effs) in rules.plain_products.items()
+        {
+            "name": name,
+            "base_value": product["base_value"],
+            "effects": product["effects"],
+        }
+        for name, product in rules.plain_products.items()
     ]
     # ingredients
     ingredients = [
@@ -64,18 +64,18 @@ def get_lists():
         "bases": bases,
         "ingredients": ingredients,
         "effects": effects,
-        "rules": rule_defs
+        "rules": rule_defs,
     })
 
 
 @app.get("/batch-metadata")
-def get_batch_metadata():
+def get_batch_metadata() -> JSONResponse:
     """Return CSV-backed cultivation metadata for batch calculations."""
     return JSONResponse({"grow_products": rules.grow_products})
 
 
 @app.post("/solve", response_model=SolveResponse)
-def api_solve(req: SolveRequest):
+def api_solve(req: SolveRequest) -> SolveResponse:
     """Solve endpoint."""
     try:
         return solve_recipe(req)
@@ -85,7 +85,7 @@ def api_solve(req: SolveRequest):
 
 
 @app.get("/")
-def read_index():
+def read_index() -> FileResponse:
     """Serve the single-page application."""
     return FileResponse("static/index.html")
 

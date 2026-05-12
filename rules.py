@@ -1,13 +1,9 @@
-"""
-rules.py
-
-Defines the base products, ingredients, effects, and combination rules.
-Users should populate these lists/dicts with the full data set.
-"""
+"""Define base products, ingredients, effects, and combination rules."""
 
 from typing import Dict, List, Tuple, TypedDict
-import pandas as pd
+
 from numpy import nan
+import pandas as pd
 
 
 class GrowProduct(TypedDict):
@@ -23,9 +19,16 @@ class GrowProduct(TypedDict):
     fertilizer_price: int
 
 
+class BaseProduct(TypedDict):
+    """Base value and innate effects for a product."""
+
+    base_value: int
+    effects: List[str]
+
+
 # Base products can have default (innate) effects.
-# products -> (value, innate_effects)
-plain_products: Dict[str, Tuple[int, List[str]]] = {}
+# products -> {base_value, innate effects}
+plain_products: Dict[str, BaseProduct] = {}
 
 # List of all ingredients
 # ingredient -> (price, new_effect)
@@ -58,10 +61,10 @@ def load_products() -> None:
     df = df.replace({nan: None})
     for _, row in df.iterrows():
         innate_effects = str(row.Effects).split(";") if row.Effects else []
-        plain_products[row.Name] = (
-            int(row.Value),
-            innate_effects,
-        )
+        plain_products[str(row.Name)] = {
+            "base_value": int(row.Base_Value),
+            "effects": innate_effects,
+        }
 
 
 def load_rules() -> None:

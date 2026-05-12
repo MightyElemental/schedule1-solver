@@ -95,7 +95,7 @@ createApp({
     pricing() {
       if (!this.result?.success) return {};
       const baseObj = this.lists.bases.find(b => b.name === this.form.base);
-      const basePrice = baseObj.value;
+      const basePrice = baseObj.base_value;
       const ingredients = this.result.ingredients.map(name => {
         const obj = this.lists.ingredients.find(i => i.name === name);
         return { name, price: obj.price };
@@ -119,7 +119,7 @@ createApp({
       if (!this.result?.success) return [];
       const costs = [];
       const baseObj = this.lists.bases.find(b => b.name === this.form.base);
-      const basePrice = baseObj.value;
+      const basePrice = baseObj.base_value;
       // innate multipliers sum
       const innateSum = baseObj.effects
         .reduce((s,e) => s + this.getMultiplier(e), 0);
@@ -195,7 +195,7 @@ createApp({
           if (this.batchGrow.fertilizer) addItem("Fertilizer", plants, product.fertilizer_price);
         } else {
           const base = this.getBase(recipe.base);
-          addItem(recipe.base, quantity, base ? base.value : 0);
+          addItem(recipe.base, quantity, base ? base.base_value : 0);
         }
         recipe.ingredients.forEach(ingredientName => {
           const ingredient = this.getIngredient(ingredientName);
@@ -685,7 +685,7 @@ createApp({
         trace.push([...effects]);
       });
 
-      const stepCosts = this.buildStepCosts(base.value, base.effects, ingredientNames, trace);
+      const stepCosts = this.buildStepCosts(base.base_value, base.effects, ingredientNames, trace);
       return {
         name: name || baseName,
         base: baseName,
@@ -765,7 +765,7 @@ createApp({
       const base = this.getBase(recipe.base);
       const baseCost = this.isGrowableBase(recipe.base)
         ? this.growBaseCost(recipe.base, quantity)
-        : (base ? base.value * quantity : 0);
+        : (base ? base.base_value * quantity : 0);
       const totalCost = baseCost + ingredientCost;
       const sellPrice = unitFinancials.sellPrice * quantity;
       const profit = sellPrice - totalCost;

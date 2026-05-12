@@ -50,7 +50,7 @@ def solve_recipe(req: SolveRequest) -> SolveResponse:
             message=f"Unknown base '{base}'"
         )
 
-    start = set(rules.plain_products[base][1])
+    start = set(rules.plain_products[base]["effects"])
 
     # If we already satisfied everything (and no forbidden in final), done.
     if want_inc.issubset(start) and not (start & want_exc):
@@ -106,7 +106,7 @@ def solve_recipe(req: SolveRequest) -> SolveResponse:
             if want_inc.issubset(new_eff) and not (new_eff & want_exc):
                 # build the trace
                 trace: List[List[str]] = []
-                effects = list(rules.plain_products[base][1])
+                effects = list(rules.plain_products[base]["effects"])
                 for step in path + (ingr,):
                     effects = rules.mutate(effects, step)
                     trace.append(effects.copy())
